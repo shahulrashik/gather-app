@@ -1,104 +1,409 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gather — Beautiful Event Pages</title>
-  <link rel="stylesheet" href="/css/style.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>body { font-family: 'Inter', -apple-system, sans-serif; }</style>
-</head>
-<body>
-  <nav class="navbar">
-    <a href="/" class="logo">
-      <span class="logo-dot"></span>
-      gather
-    </a>
-    <div class="nav-actions">
-      <a href="/create" class="btn btn-primary">Create Event</a>
-    </div>
-  </nav>
-
-  <section class="hero">
-    <h1>Gather people.<br>In person.</h1>
-    <p>Create beautiful event pages for real-world gatherings. Simple registration, QR check-in, and nothing more.</p>
-    <div class="hero-actions">
-      <a href="/create" class="btn btn-primary btn-lg">Create your event</a>
-    </div>
-  </section>
-
-  <section class="container" style="padding-bottom: 80px;">
-    <div id="events-list" class="events-grid"></div>
-  </section>
-
-  <script>
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
-    function formatDate(dateStr) {
-      const d = new Date(dateStr + 'T00:00:00');
-      return { month: months[d.getMonth()], day: d.getDate() };
-    }
-
-    function formatTime(timeStr) {
-      const [h, m] = timeStr.split(':');
-      const hour = parseInt(h);
-      const ampm = hour >= 12 ? 'PM' : 'AM';
-      const h12 = hour % 12 || 12;
-      return `${h12}:${m} ${ampm}`;
-    }
-
-    async function loadEvents() {
-      try {
-        const res = await fetch('/api/events');
-        const events = await res.json();
-
-        const container = document.getElementById('events-list');
-
-        if (events.length === 0) {
-          container.innerHTML = `
-            <div class="empty-state">
-              <div class="empty-state-icon">📅</div>
-              <h3>No events yet</h3>
-              <p>Create your first event to get started</p>
-            </div>
-          `;
-          return;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gather - Discover Local Events</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
-        container.innerHTML = events.map(event => {
-          const { month, day } = formatDate(event.date);
-          return `
-            <a href="/event/${event.slug}" class="card card-hover event-card">
-              <div class="event-date-box">
-                <div class="event-date-month">${month}</div>
-                <div class="event-date-day">${day}</div>
-              </div>
-              <div class="event-info">
-                <h3>${event.title}</h3>
-                <div class="event-meta">
-                  <span class="event-meta-item">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                    ${formatTime(event.start_time)}
-                  </span>
-                  <span class="event-meta-item">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    ${event.location.length > 35 ? event.location.substring(0, 35) + '…' : event.location}
-                  </span>
-                  <span class="badge ${event.ticket_type === 'free' ? 'badge-free' : 'badge-paid'}">
-                    ${event.ticket_type === 'free' ? 'Free' : '$' + parseFloat(event.price).toFixed(0)}
-                  </span>
-                </div>
-              </div>
-            </a>
-          `;
-        }).join('');
-      } catch (err) {
-        console.error(err);
-      }
-    }
+        body {
+            background-color: #f9f9f9;
+        }
 
-    loadEvents();
-  </script>
+        .navbar {
+            background: white;
+            border-bottom: 1px solid #e5e5e5;
+            padding: 1rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .navbar .container-wide {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .logo-dot {
+            width: 8px;
+            height: 8px;
+            background: #9333ea;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        #nav-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .hero {
+            background: white;
+            padding: 5rem 1rem;
+            text-align: center;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .hero-content {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin: 0 0 1rem 0;
+            line-height: 1.2;
+            letter-spacing: -1px;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            color: #666;
+            margin: 0 0 2rem 0;
+            line-height: 1.6;
+        }
+
+        .hero .btn-primary {
+            margin: 0;
+        }
+
+        .events-section {
+            padding: 4rem 1rem;
+        }
+
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 768px) {
+            .events-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+        }
+
+        .event-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e5e5e5;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .event-card:hover {
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+            transform: translateY(-4px);
+        }
+
+        .event-cover {
+            height: 180px;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            position: relative;
+            overflow: hidden;
+        }
+
+        .event-cover::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+        }
+
+        .event-status {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            z-index: 2;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-draft {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .event-date-box {
+            position: absolute;
+            bottom: 1rem;
+            left: 1rem;
+            background: white;
+            border-radius: 8px;
+            padding: 0.5rem 0.8rem;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .event-date-month {
+            font-size: 0.7rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .event-date-day {
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .event-info {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .event-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0 0 0.5rem 0;
+            color: #1a1a1a;
+            line-height: 1.4;
+        }
+
+        .event-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin: 1rem 0 0 0;
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e5e5;
+        }
+
+        .event-meta-item {
+            font-size: 0.9rem;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .event-meta-item strong {
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+
+        .ticket-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            width: fit-content;
+            margin-top: 0.5rem;
+        }
+
+        .badge-free {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-paid {
+            background: #dbeafe;
+            color: #0c4a6e;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #999;
+        }
+
+        .empty-state h3 {
+            font-size: 1.25rem;
+            margin: 0 0 0.5rem 0;
+            color: #666;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #999;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container-wide">
+            <div class="logo">
+                gather<span class="logo-dot"></span>
+            </div>
+            <div id="nav-actions"></div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Gather people.<br>In person.</h1>
+            <p>Discover and attend the best local events in your community</p>
+            <button class="btn btn-primary btn-lg">Explore Events</button>
+        </div>
+    </section>
+
+    <!-- Events Grid -->
+    <section class="events-section">
+        <div class="events-grid" id="events-grid">
+            <div class="loading">Loading events...</div>
+        </div>
+    </section>
+
+    <script src="/js/auth.js"></script>
+    <script>
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+        function formatDate(dateStr) {
+            const d = new Date(dateStr+'T00:00:00');
+            return {month: months[d.getMonth()], day: d.getDate()};
+        }
+
+        function formatTime(timeStr) {
+            const [h,m] = timeStr.split(':');
+            const hour=parseInt(h);
+            return `${hour%12||12}:${m} ${hour>=12?'PM':'AM'}`;
+        }
+
+        async function loadEvents() {
+            try {
+                const response = await fetch('/api/events');
+                const events = await response.json();
+
+                const grid = document.getElementById('events-grid');
+                grid.innerHTML = '';
+
+                if (!events || events.length === 0) {
+                    grid.innerHTML = `
+                        <div class="empty-state" style="grid-column: 1/-1;">
+                            <h3>No events yet</h3>
+                            <p>Check back soon for exciting gatherings in your area!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                events.forEach(event => {
+                    const dateObj = formatDate(event.date);
+                    const gradientStart = event.cover_gradient?.split(' to ')[0] || '#9333ea';
+                    const gradientEnd = event.cover_gradient?.split(' to ')[1] || '#ec4899';
+
+                    let statusBadge = '';
+                    if (event.status === 'draft') {
+                        statusBadge = '<span class="badge badge-draft">Draft</span>';
+                    } else if (event.status === 'cancelled') {
+                        statusBadge = '<span class="badge badge-cancelled">Cancelled</span>';
+                    }
+
+                    let ticketBadge = '';
+                    if (event.ticket_type === 'free') {
+                        ticketBadge = '<span class="ticket-badge badge-free">Free</span>';
+                    } else if (event.ticket_type === 'paid') {
+                        ticketBadge = `<span class="ticket-badge badge-paid">$${event.ticket_price || 'TBA'}</span>`;
+                    }
+
+                    const spotsRemaining = event.capacity ? `${event.capacity - (event.attendees || 0)} spots left` : 'Spots available';
+
+                    const card = document.createElement('a');
+                    card.href = `/event/${event.slug}`;
+                    card.className = 'event-card';
+                    card.innerHTML = `
+                        <div class="event-cover" style="--gradient-start: ${gradientStart}; --gradient-end: ${gradientEnd};">
+                            ${statusBadge}
+                            <div class="event-date-box">
+                                <div class="event-date-month">${dateObj.month}</div>
+                                <div class="event-date-day">${dateObj.day}</div>
+                            </div>
+                        </div>
+                        <div class="event-info">
+                            <h3 class="event-title">${event.title}</h3>
+                            <div class="event-meta">
+                                <div class="event-meta-item">
+                                    <span>📍</span>
+                                    <strong>${event.location || 'Location TBA'}</strong>
+                                </div>
+                                <div class="event-meta-item">
+                                    <span>🕒</span>
+                                    <strong>${formatTime(event.time)}</strong>
+                                </div>
+                                ${ticketBadge}
+                                <div class="event-meta-item" style="margin-top: 0.5rem; color: #999; font-size: 0.85rem;">
+                                    ${spotsRemaining}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Error loading events:', error);
+                const grid = document.getElementById('events-grid');
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <h3>Unable to load events</h3>
+                        <p>Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize
+        updateNav();
+        loadEvents();
+
+        // CTA Button
+        document.querySelector('.hero .btn-primary').addEventListener('click', () => {
+            document.getElementById('events-grid').scrollIntoView({ behavior: 'smooth' });
+        });
+    </script>
 </body>
 </html>

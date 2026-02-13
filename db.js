@@ -31,9 +31,24 @@ async function getDb() {
       price REAL NOT NULL DEFAULT 0,
       ticket_type TEXT NOT NULL DEFAULT 'free',
       cover_image TEXT,
+      cover_gradient TEXT DEFAULT 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      accent_color TEXT DEFAULT '#7c3aed',
+      status TEXT DEFAULT 'published',
+      user_id TEXT,
       host_name TEXT,
       host_email TEXT,
       slug TEXT UNIQUE NOT NULL,
+      custom_slug INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
       created_at TEXT DEFAULT (datetime('now'))
     )
   `);
@@ -46,6 +61,21 @@ async function getDb() {
       email TEXT NOT NULL,
       qr_code TEXT,
       checked_in INTEGER DEFAULT 0,
+      checked_in_at TEXT,
+      cancelled INTEGER DEFAULT 0,
+      cancel_token TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (event_id) REFERENCES events(id)
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS waitlist (
+      id TEXT PRIMARY KEY,
+      event_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      notified INTEGER DEFAULT 0,
       created_at TEXT DEFAULT (datetime('now')),
       FOREIGN KEY (event_id) REFERENCES events(id)
     )

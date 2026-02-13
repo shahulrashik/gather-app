@@ -6,14 +6,15 @@
   <title>Register — Gather</title>
   <link rel="stylesheet" href="/css/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>body { font-family: 'Inter', -apple-system, sans-serif; }</style>
+  <style>body { font-family: 'Inter', -apple-system, sans-serif; }
+  .waitlist-msg { background: var(--orange-bg); border: 1.5px solid #fde68a; border-radius: var(--radius); padding: 16px; margin-bottom: 24px; }
+  .waitlist-msg h4 { color: #92400e; font-size: 0.938rem; margin-bottom: 4px; }
+  .waitlist-msg p { color: #a16207; font-size: 0.813rem; }
+  </style>
 </head>
 <body>
   <nav class="navbar">
-    <a href="/" class="logo">
-      <span class="logo-dot"></span>
-      gather
-    </a>
+    <a href="/" class="logo"><span class="logo-dot"></span> gather</a>
   </nav>
 
   <div class="register-page">
@@ -21,7 +22,7 @@
       <div id="loading" class="loading"><div class="spinner"></div></div>
 
       <div id="register-content" style="display:none;">
-        <a id="back-link" href="#" class="btn btn-ghost btn-sm mb-4" style="margin-left: -16px;">
+        <a id="back-link" href="#" class="btn btn-ghost btn-sm mb-4" style="margin-left:-16px;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
           Back to event
         </a>
@@ -29,42 +30,47 @@
         <h2 id="event-title"></h2>
         <p class="text-muted" id="event-subtitle"></p>
 
-        <form id="register-form" class="mt-8">
+        <div id="waitlist-notice" class="waitlist-msg mt-6" style="display:none;">
+          <h4>This event is full</h4>
+          <p>Join the waitlist and we'll notify you if a spot opens up.</p>
+        </div>
+
+        <form id="register-form" class="mt-6">
           <div class="form-group">
             <label class="form-label" for="name">Full Name</label>
             <input type="text" id="name" class="form-input" placeholder="Your full name" required>
           </div>
-
           <div class="form-group">
             <label class="form-label" for="email">Email</label>
             <input type="email" id="email" class="form-input" placeholder="you@example.com" required>
             <p class="form-hint">We'll send your ticket confirmation here</p>
           </div>
-
           <div class="mt-6">
-            <button type="submit" class="btn btn-primary btn-lg btn-full" id="submit-btn">
-              Confirm Registration
-            </button>
+            <button type="submit" class="btn btn-primary btn-lg btn-full" id="submit-btn">Confirm Registration</button>
           </div>
-
-          <div id="error-msg" class="mt-4 text-center text-sm" style="color: var(--red); display: none;"></div>
+          <div id="error-msg" class="mt-4 text-center text-sm" style="color:var(--red);display:none;"></div>
         </form>
+
+        <!-- Waitlist success -->
+        <div id="waitlist-success" style="display:none;text-align:center;padding:40px 0;">
+          <div class="success-icon" style="background:var(--orange-bg);margin:0 auto 16px;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          </div>
+          <h2>You're on the waitlist!</h2>
+          <p class="text-muted mt-2">Position: <strong id="waitlist-pos"></strong></p>
+          <p class="text-muted text-sm mt-2">We'll let you know if a spot opens up.</p>
+          <a id="waitlist-back-link" href="#" class="btn btn-outline mt-6">Back to event</a>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
     const slug = window.location.pathname.split('/')[2];
-
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    function formatTime(t) { const [h,m]=t.split(':'); const hr=parseInt(h); return `${hr%12||12}:${m} ${hr>=12?'PM':'AM'}`; }
 
-    function formatTime(timeStr) {
-      const [h, m] = timeStr.split(':');
-      const hour = parseInt(h);
-      const ampm = hour >= 12 ? 'PM' : 'AM';
-      const h12 = hour % 12 || 12;
-      return `${h12}:${m} ${ampm}`;
-    }
+    let isWaitlistMode = false;
 
     async function loadEvent() {
       try {
@@ -73,50 +79,81 @@
 
         document.title = `Register — ${event.title}`;
         document.getElementById('back-link').href = `/event/${slug}`;
+        document.getElementById('waitlist-back-link').href = `/event/${slug}`;
         document.getElementById('event-title').textContent = event.title;
 
         const d = new Date(event.date + 'T00:00:00');
         document.getElementById('event-subtitle').textContent =
           `${months[d.getMonth()]} ${d.getDate()} · ${formatTime(event.start_time)} · ${event.location}`;
 
+        // Check if full
+        const spotsLeft = event.capacity - event.rsvp_count;
+        if (spotsLeft <= 0) {
+          isWaitlistMode = true;
+          document.getElementById('waitlist-notice').style.display = 'block';
+          document.getElementById('submit-btn').textContent = 'Join Waitlist';
+          document.getElementById('submit-btn').style.background = '#d97706';
+        }
+
         document.getElementById('loading').style.display = 'none';
         document.getElementById('register-content').style.display = 'block';
-      } catch (err) {
+      } catch {
         document.getElementById('loading').innerHTML = '<p class="text-center text-muted">Event not found</p>';
       }
     }
 
     document.getElementById('register-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-
       const btn = document.getElementById('submit-btn');
       const errorMsg = document.getElementById('error-msg');
       btn.disabled = true;
-      btn.textContent = 'Registering...';
+      btn.textContent = isWaitlistMode ? 'Joining...' : 'Registering...';
       errorMsg.style.display = 'none';
 
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+
       try {
-        const res = await fetch(`/api/events/${slug}/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: document.getElementById('name').value,
-            email: document.getElementById('email').value,
-          }),
-        });
+        if (isWaitlistMode) {
+          const res = await fetch(`/api/events/${slug}/waitlist`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email }),
+          });
+          if (!res.ok) { const err = await res.json(); throw new Error(err.error); }
+          const result = await res.json();
+          document.getElementById('waitlist-pos').textContent = `#${result.position}`;
+          document.getElementById('register-form').style.display = 'none';
+          document.getElementById('waitlist-notice').style.display = 'none';
+          document.getElementById('waitlist-success').style.display = 'block';
+        } else {
+          const res = await fetch(`/api/events/${slug}/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email }),
+          });
 
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.error || 'Registration failed');
+          if (!res.ok) {
+            const err = await res.json();
+            if (err.isFull) {
+              isWaitlistMode = true;
+              document.getElementById('waitlist-notice').style.display = 'block';
+              btn.textContent = 'Join Waitlist';
+              btn.style.background = '#d97706';
+              btn.disabled = false;
+              return;
+            }
+            throw new Error(err.error || 'Registration failed');
+          }
+
+          const result = await res.json();
+          window.location.href = `/event/${slug}/confirmation/${result.id}`;
         }
-
-        const result = await res.json();
-        window.location.href = `/event/${slug}/confirmation/${result.id}`;
       } catch (err) {
         errorMsg.textContent = err.message;
         errorMsg.style.display = 'block';
         btn.disabled = false;
-        btn.textContent = 'Confirm Registration';
+        btn.textContent = isWaitlistMode ? 'Join Waitlist' : 'Confirm Registration';
       }
     });
 

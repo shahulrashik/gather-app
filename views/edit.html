@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Event — Gather</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body { font-family: 'Inter', -apple-system, sans-serif; }
+  .gradient-swatches, .color-swatches { display: flex; gap: 12px; flex-wrap: wrap; }
+  .gradient-swatch, .color-swatch { width: 48px; height: 48px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all 150ms ease; }
+  .gradient-swatch.selected, .color-swatch.selected { border-color: var(--gray-900); box-shadow: 0 0 0 3px var(--accent-bg); }
+  .gradient-swatch:hover, .color-swatch:hover { transform: scale(1.1); }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="logo"><span class="logo-dot"></span> gather</a>
+    <div class="nav-actions" id="nav-actions"></div>
+  </nav>
+
+  <div class="create-page">
+    <div class="container">
+      <div id="loading" class="loading"><div class="spinner"></div></div>
+      <div id="edit-content" style="display:none;">
+        <a id="back-link" href="#" class="btn btn-ghost btn-sm mb-4" style="margin-left:-16px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Back to event
+        </a>
+        <h1>Edit Event</h1>
+        <p class="text-muted">Update your event details.</p>
+
+        <form id="edit-form" class="create-form mt-8">
+          <div class="form-group">
+            <label class="form-label">Event Title</label>
+            <input type="text" id="title" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea id="description" class="form-textarea"></textarea>
+          </div>
+          <hr class="section-divider">
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" id="date" class="form-input" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Start Time</label>
+              <input type="time" id="start_time" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">End Time</label>
+              <input type="time" id="end_time" class="form-input" required>
+            </div>
+          </div>
+          <hr class="section-divider">
+          <div class="form-group">
+            <label class="form-label">Location</label>
+            <input type="text" id="location" class="form-input" required>
+          </div>
+          <hr class="section-divider">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Capacity</label>
+              <input type="number" id="capacity" class="form-input" min="1" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ticket Type</label>
+              <select id="ticket_type" class="form-input">
+                <option value="free">Free</option>
+                <option value="paid">Paid</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" id="price-field" style="display:none;">
+            <label class="form-label">Price ($)</label>
+            <input type="number" id="price" class="form-input" min="0" step="0.01">
+          </div>
+          <hr class="section-divider">
+          <div class="form-group">
+            <label class="form-label">Custom URL</label>
+            <input type="text" id="custom_slug" class="form-input" placeholder="your-custom-url">
+            <p class="form-hint">Letters, numbers, and hyphens only</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cover Gradient</label>
+            <div class="gradient-swatches" id="gradient-swatches"></div>
+            <input type="hidden" id="cover_gradient">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Accent Color</label>
+            <div class="color-swatches" id="color-swatches"></div>
+            <input type="hidden" id="accent_color">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select id="status" class="form-input">
+              <option value="published">Published</option>
+              <option value="draft">Draft</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+          <hr class="section-divider">
+          <div style="display:flex;gap:12px;">
+            <button type="submit" class="btn btn-primary btn-lg" style="flex:1;" id="save-btn">Save Changes</button>
+            <button type="button" class="btn btn-outline btn-lg" id="cancel-btn">Cancel</button>
+          </div>
+          <div id="error-msg" class="mt-4 text-center text-sm" style="color:var(--red);display:none;"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/auth.js"></script>
+  <script>
+    const slug = window.location.pathname.split('/')[2];
+    requireLogin(`/event/${slug}/edit`);
+    updateNav();
+
+    const gradients = [
+      'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+      'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+      'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+      'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+      'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)'
+    ];
+    const colors = ['#7c3aed','#2563eb','#059669','#dc2626','#d97706','#0891b2'];
+
+    function initSwatches(currentGradient, currentColor) {
+      const gc = document.getElementById('gradient-swatches');
+      gc.innerHTML = gradients.map((g, i) =>
+        `<div class="gradient-swatch ${g === currentGradient ? 'selected' : ''}" style="background:${g}" data-value="${g}"></div>`
+      ).join('');
+      document.getElementById('cover_gradient').value = currentGradient || gradients[0];
+      gc.querySelectorAll('.gradient-swatch').forEach(s => {
+        s.addEventListener('click', () => {
+          gc.querySelectorAll('.gradient-swatch').forEach(x => x.classList.remove('selected'));
+          s.classList.add('selected');
+          document.getElementById('cover_gradient').value = s.dataset.value;
+        });
+      });
+
+      const cc = document.getElementById('color-swatches');
+      cc.innerHTML = colors.map(c =>
+        `<div class="color-swatch ${c === currentColor ? 'selected' : ''}" style="background:${c}" data-value="${c}"></div>`
+      ).join('');
+      document.getElementById('accent_color').value = currentColor || colors[0];
+      cc.querySelectorAll('.color-swatch').forEach(s => {
+        s.addEventListener('click', () => {
+          cc.querySelectorAll('.color-swatch').forEach(x => x.classList.remove('selected'));
+          s.classList.add('selected');
+          document.getElementById('accent_color').value = s.dataset.value;
+        });
+      });
+    }
+
+    async function load() {
+      try {
+        const res = await fetch(`/api/events/${slug}`);
+        if (!res.ok) throw new Error('Not found');
+        const e = await res.json();
+
+        if (!e.is_owner) { window.location.href = `/event/${slug}`; return; }
+
+        document.getElementById('back-link').href = `/event/${slug}`;
+        document.getElementById('title').value = e.title;
+        document.getElementById('description').value = e.description || '';
+        document.getElementById('date').value = e.date;
+        document.getElementById('start_time').value = e.start_time;
+        document.getElementById('end_time').value = e.end_time;
+        document.getElementById('location').value = e.location;
+        document.getElementById('capacity').value = e.capacity;
+        document.getElementById('ticket_type').value = e.ticket_type;
+        document.getElementById('price').value = e.price || 0;
+        document.getElementById('custom_slug').value = e.slug;
+        document.getElementById('status').value = e.status || 'published';
+
+        if (e.ticket_type === 'paid') document.getElementById('price-field').style.display = 'block';
+
+        initSwatches(e.cover_gradient, e.accent_color);
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('edit-content').style.display = 'block';
+      } catch (err) {
+        document.getElementById('loading').innerHTML = '<p class="text-center text-muted">Event not found</p>';
+      }
+    }
+
+    document.getElementById('ticket_type').addEventListener('change', function() {
+      document.getElementById('price-field').style.display = this.value === 'paid' ? 'block' : 'none';
+    });
+
+    document.getElementById('cancel-btn').addEventListener('click', () => {
+      window.location.href = `/event/${slug}`;
+    });
+
+    document.getElementById('edit-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('save-btn');
+      const err = document.getElementById('error-msg');
+      btn.disabled = true; btn.textContent = 'Saving...'; err.style.display = 'none';
+
+      try {
+        const res = await fetch(`/api/events/${slug}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: document.getElementById('title').value,
+            description: document.getElementById('description').value,
+            date: document.getElementById('date').value,
+            start_time: document.getElementById('start_time').value,
+            end_time: document.getElementById('end_time').value,
+            location: document.getElementById('location').value,
+            capacity: parseInt(document.getElementById('capacity').value),
+            ticket_type: document.getElementById('ticket_type').value,
+            price: parseFloat(document.getElementById('price').value) || 0,
+            custom_slug: document.getElementById('custom_slug').value,
+            cover_gradient: document.getElementById('cover_gradient').value,
+            accent_color: document.getElementById('accent_color').value,
+            status: document.getElementById('status').value,
+          }),
+        });
+        if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
+        const result = await res.json();
+        window.location.href = `/event/${result.slug}`;
+      } catch (error) {
+        err.textContent = error.message; err.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Save Changes';
+      }
+    });
+
+    load();
+  </script>
+</body>
+</html>

@@ -1,166 +1,822 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard — Gather</title>
-  <link rel="stylesheet" href="/css/style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>body { font-family: 'Inter', -apple-system, sans-serif; }</style>
-</head>
-<body>
-  <nav class="navbar">
-    <a href="/" class="logo">
-      <span class="logo-dot"></span>
-      gather
-    </a>
-    <div class="nav-actions" id="nav-actions"></div>
-  </nav>
-
-  <div class="dashboard-page">
-    <div class="container-wide">
-      <div id="loading" class="loading"><div class="spinner"></div></div>
-      <div id="dashboard-content" style="display:none;"></div>
-    </div>
-  </div>
-
-  <script>
-    const slug = window.location.pathname.split('/')[2];
-
-    function getInitials(name) {
-      return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-    }
-
-    function formatDate(dateStr) {
-      const d = new Date(dateStr);
-      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      return `${months[d.getMonth()]} ${d.getDate()}`;
-    }
-
-    async function loadDashboard() {
-      try {
-        const res = await fetch(`/api/events/${slug}/attendees`);
-        if (!res.ok) throw new Error('Failed to load');
-        const data = await res.json();
-        const { event, attendees, total, checked_in } = data;
-
-        document.title = `Dashboard — ${event.title}`;
-
-        document.getElementById('nav-actions').innerHTML = `
-          <a href="/event/${slug}" class="btn btn-ghost btn-sm">View Event</a>
-          <a href="/event/${slug}/checkin" class="btn btn-primary btn-sm">QR Check-in</a>
-        `;
-
-        const spotsLeft = Math.max(0, event.capacity - total);
-
-        document.getElementById('dashboard-content').innerHTML = `
-          <div class="dashboard-header">
-            <div>
-              <h1>${event.title}</h1>
-              <p class="text-muted text-sm">${event.location}</p>
-            </div>
-          </div>
-
-          <div class="stats-grid">
-            <div class="card stat-card">
-              <div class="stat-value">${total}</div>
-              <div class="stat-label">Total RSVPs</div>
-            </div>
-            <div class="card stat-card">
-              <div class="stat-value">${checked_in}</div>
-              <div class="stat-label">Checked In</div>
-            </div>
-            <div class="card stat-card">
-              <div class="stat-value">${spotsLeft}</div>
-              <div class="stat-label">Spots Left</div>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="search-bar">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-              </svg>
-              <input type="text" id="search-input" placeholder="Search by name or email...">
-            </div>
-
-            <div id="attendee-list" class="attendee-list">
-              ${attendees.length === 0
-                ? `<div class="empty-state">
-                    <div class="empty-state-icon">👥</div>
-                    <h3>No attendees yet</h3>
-                    <p>Share your event link to get RSVPs</p>
-                  </div>`
-                : attendees.map(a => `
-                  <div class="attendee-row" data-name="${a.name.toLowerCase()}" data-email="${a.email.toLowerCase()}" data-id="${a.id}">
-                    <div class="attendee-avatar">${getInitials(a.name)}</div>
-                    <div class="attendee-info">
-                      <div class="attendee-name">${a.name}</div>
-                      <div class="attendee-email">${a.email}</div>
-                    </div>
-                    <div class="attendee-actions">
-                      <span class="badge ${a.checked_in ? 'badge-checked' : 'badge-pending'}" id="badge-${a.id}">
-                        ${a.checked_in ? '✓ Checked in' : 'Not checked in'}
-                      </span>
-                      ${!a.checked_in ? `
-                        <button class="btn btn-sm btn-outline checkin-btn" data-id="${a.id}" id="btn-${a.id}">
-                          Check in
-                        </button>
-                      ` : ''}
-                    </div>
-                  </div>
-                `).join('')}
-            </div>
-          </div>
-        `;
-
-        // Search
-        const searchInput = document.getElementById('search-input');
-        if (searchInput) {
-          searchInput.addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase();
-            document.querySelectorAll('.attendee-row').forEach(row => {
-              const name = row.dataset.name;
-              const email = row.dataset.email;
-              row.style.display = (name.includes(query) || email.includes(query)) ? '' : 'none';
-            });
-          });
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Gather</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        // Check-in buttons
-        document.querySelectorAll('.checkin-btn').forEach(btn => {
-          btn.addEventListener('click', async () => {
-            const id = btn.dataset.id;
-            btn.disabled = true;
-            btn.textContent = '...';
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
 
-            try {
-              const res = await fetch(`/api/attendees/${id}/checkin`, { method: 'POST' });
-              if (res.ok) {
-                const badge = document.getElementById(`badge-${id}`);
-                badge.className = 'badge badge-checked';
-                badge.textContent = '✓ Checked in';
-                btn.remove();
+        /* Navbar */
+        nav {
+            background-color: #fff;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-                // Update stat
-                loadDashboard();
-              }
-            } catch (err) {
-              btn.disabled = false;
-              btn.textContent = 'Check in';
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #000;
+        }
+
+        #nav-actions {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        #nav-actions a {
+            text-decoration: none;
+            color: #666;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        #nav-actions a:hover {
+            color: #000;
+        }
+
+        /* Dashboard Page */
+        .dashboard-page {
+            padding: 2rem;
+            min-height: calc(100vh - 70px);
+        }
+
+        .container-wide {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Status Controls */
+        .status-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background-color: #fff;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-badge.published {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-badge.cancelled {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        .status-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        /* Dashboard Header */
+        .dashboard-header {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            border: 1px solid #e0e0e0;
+        }
+
+        .dashboard-header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: #000;
+        }
+
+        .dashboard-header .subtitle {
+            font-size: 1.05rem;
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (min-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
             }
-          });
+        }
+
+        .stat-card {
+            background-color: #fff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Card */
+        .card {
+            background-color: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card h2 {
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            color: #000;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 1rem;
+        }
+
+        /* Search Bar */
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background-color: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-bar input {
+            border: none;
+            background: none;
+            outline: none;
+            flex: 1;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+        }
+
+        .search-icon {
+            color: #999;
+            margin-right: 0.5rem;
+        }
+
+        /* Attendee List */
+        .attendee-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .attendee-row {
+            display: grid;
+            grid-template-columns: 50px 1fr 200px 120px 100px;
+            gap: 1.5rem;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e0e0e0;
+            transition: background-color 0.2s;
+        }
+
+        .attendee-row:last-child {
+            border-bottom: none;
+        }
+
+        .attendee-row:hover {
+            background-color: #f9f9f9;
+        }
+
+        @media (max-width: 768px) {
+            .attendee-row {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+
+            .attendee-actions {
+                order: -1;
+            }
+        }
+
+        .attendee-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .attendee-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .attendee-name {
+            font-weight: 600;
+            color: #000;
+            margin-bottom: 0.25rem;
+        }
+
+        .attendee-email {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .attendee-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        /* Badges */
+        .badge-checked {
+            display: inline-block;
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .badge-pending {
+            display: inline-block;
+            background-color: #f5f5f5;
+            color: #666;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #667eea;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background-color: #5568d3;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: #667eea;
+            border: 1px solid #667eea;
+        }
+
+        .btn-outline:hover {
+            background-color: #f0f4ff;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        .btn-ghost {
+            background-color: transparent;
+            color: #666;
+            border: 1px solid #e0e0e0;
+        }
+
+        .btn-ghost:hover {
+            background-color: #f5f5f5;
+        }
+
+        .btn-danger {
+            background-color: #e53935;
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background-color: #c62828;
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+        }
+
+        .spinner {
+            border: 4px solid #f0f0f0;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            font-size: 1.05rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav>
+        <div class="logo">Gather</div>
+        <div id="nav-actions">
+            <a href="#" onclick="viewEvent(event)">View Event</a>
+            <a href="#" onclick="openQRCheckin(event)">QR Check-in</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="dashboard-page">
+        <div class="container-wide">
+            <!-- Status Controls -->
+            <div class="status-controls" id="statusControls"></div>
+
+            <!-- Dashboard Header -->
+            <div class="dashboard-header">
+                <h1 id="eventTitle">Loading...</h1>
+                <p class="subtitle" id="eventLocation"></p>
+                <div class="header-actions">
+                    <a href="#" class="btn btn-primary" id="editBtn" onclick="editEvent(event)">Edit Event</a>
+                    <a href="#" class="btn btn-outline" id="exportBtn">Export CSV</a>
+                    <button class="btn btn-danger" onclick="deleteEvent(event)">Delete Event</button>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalRsvps">0</div>
+                    <div class="stat-label">Total RSVPs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="checkedIn">0</div>
+                    <div class="stat-label">Checked In</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="spotsLeft">0</div>
+                    <div class="stat-label">Spots Left</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="waitlistCount">0</div>
+                    <div class="stat-label">Waitlist</div>
+                </div>
+            </div>
+
+            <!-- Check-in Activity Chart -->
+            <div class="card">
+                <h2>Check-in Activity</h2>
+                <div class="chart-container">
+                    <canvas id="checkinChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Attendee List Section -->
+            <div class="card">
+                <h2>Attendees</h2>
+                <div class="search-bar">
+                    <span class="search-icon">🔍</span>
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        placeholder="Search by name or email..." 
+                        onkeyup="filterAttendees()"
+                    >
+                </div>
+
+                <div id="attendeeContainer">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script>
+        let eventData = null;
+        let attendeesData = [];
+        let filteredAttendees = [];
+        let checkinChart = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateNav();
+            loadEventData();
         });
 
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('dashboard-content').style.display = 'block';
+        // Get slug from URL
+        function getSlug() {
+            const pathParts = window.location.pathname.split('/');
+            return pathParts[2];
+        }
 
-      } catch (err) {
-        document.getElementById('loading').innerHTML = '<p class="text-center text-muted">Failed to load dashboard</p>';
-      }
-    }
+        // Load event data and attendees
+        async function loadEventData() {
+            const slug = getSlug();
+            try {
+                const response = await fetch(`/api/events/${slug}/attendees`);
+                if (!response.ok) throw new Error('Failed to load event data');
+                
+                const data = await response.json();
+                eventData = data.event;
+                attendeesData = data.attendees || [];
+                filteredAttendees = [...attendeesData];
 
-    loadDashboard();
-  </script>
+                renderEventHeader();
+                renderStatusControls();
+                updateStats();
+                renderAttendeeList();
+                initializeChart();
+            } catch (error) {
+                console.error('Error loading event data:', error);
+                document.getElementById('attendeeContainer').innerHTML = `
+                    <div class="empty-state">
+                        <p>Error loading event data. Please try again.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Render event header
+        function renderEventHeader() {
+            if (!eventData) return;
+
+            document.getElementById('eventTitle').textContent = eventData.title || 'Event';
+            document.getElementById('eventLocation').textContent = eventData.location || '';
+
+            const slug = getSlug();
+            document.getElementById('editBtn').href = `/event/${slug}/edit`;
+            document.getElementById('exportBtn').href = `/api/events/${slug}/export`;
+        }
+
+        // Render status controls
+        function renderStatusControls() {
+            if (!eventData) return;
+
+            const slug = getSlug();
+            const statusBadge = `
+                <span class="status-badge ${eventData.status}">
+                    ${eventData.status.charAt(0).toUpperCase() + eventData.status.slice(1)}
+                </span>
+            `;
+
+            let actionButtons = '';
+            if (eventData.status === 'published') {
+                actionButtons = `
+                    <button class="btn btn-outline btn-sm" onclick="cancelEvent('${slug}')">
+                        Mark as Cancelled
+                    </button>
+                `;
+            } else if (eventData.status === 'cancelled') {
+                actionButtons = `
+                    <button class="btn btn-outline btn-sm" onclick="unpublishEvent('${slug}')">
+                        Mark as Published
+                    </button>
+                `;
+            }
+
+            document.getElementById('statusControls').innerHTML = `
+                <div>
+                    <strong>Event Status:</strong>
+                    ${statusBadge}
+                </div>
+                <div class="status-actions">
+                    ${actionButtons}
+                </div>
+            `;
+        }
+
+        // Update statistics
+        function updateStats() {
+            if (!eventData) return;
+
+            const totalRsvps = attendeesData.length;
+            const checkedIn = attendeesData.filter(a => a.checked_in).length;
+            const spotsLeft = Math.max(0, (eventData.capacity || 0) - totalRsvps);
+            const waitlistCount = attendeesData.filter(a => a.status === 'waitlist').length;
+
+            document.getElementById('totalRsvps').textContent = totalRsvps;
+            document.getElementById('checkedIn').textContent = checkedIn;
+            document.getElementById('spotsLeft').textContent = spotsLeft;
+            document.getElementById('waitlistCount').textContent = waitlistCount;
+        }
+
+        // Initialize check-in chart
+        function initializeChart() {
+            const checkinTimes = eventData.checkin_times || [];
+            
+            // Group check-ins by hour
+            const hourCounts = {};
+            checkinTimes.forEach(timestamp => {
+                const date = new Date(timestamp);
+                const hour = date.getHours();
+                const hourLabel = `${String(hour).padStart(2, '0')}:00`;
+                hourCounts[hourLabel] = (hourCounts[hourLabel] || 0) + 1;
+            });
+
+            const labels = Object.keys(hourCounts).sort();
+            const data = labels.map(label => hourCounts[label]);
+
+            const ctx = document.getElementById('checkinChart').getContext('2d');
+            
+            if (checkinChart) {
+                checkinChart.destroy();
+            }
+
+            checkinChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Check-ins',
+                        data: data,
+                        backgroundColor: '#667eea',
+                        borderColor: '#5568d3',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Render attendee list
+        function renderAttendeeList() {
+            const container = document.getElementById('attendeeContainer');
+
+            if (filteredAttendees.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>No attendees yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<div class="attendee-list">';
+            
+            filteredAttendees.forEach(attendee => {
+                const initials = (attendee.name || 'A')
+                    .split(' ')
+                    .map(n => n[0])
+                    .join('')
+                    .toUpperCase()
+                    .slice(0, 2);
+
+                const statusBadge = attendee.checked_in 
+                    ? `<span class="badge-checked">Checked In</span>`
+                    : `<span class="badge-pending">Pending</span>`;
+
+                const checkInButton = !attendee.checked_in
+                    ? `<button class="btn btn-sm btn-primary" onclick="checkInAttendee('${attendee.id}')">Check In</button>`
+                    : '';
+
+                html += `
+                    <div class="attendee-row">
+                        <div class="attendee-avatar">${initials}</div>
+                        <div class="attendee-info">
+                            <div class="attendee-name">${attendee.name || 'Unknown'}</div>
+                            <div class="attendee-email">${attendee.email || 'No email'}</div>
+                        </div>
+                        <div>${statusBadge}</div>
+                        <div class="attendee-actions">
+                            ${checkInButton}
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // Filter attendees
+        function filterAttendees() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            filteredAttendees = attendeesData.filter(attendee => {
+                const name = (attendee.name || '').toLowerCase();
+                const email = (attendee.email || '').toLowerCase();
+                return name.includes(searchTerm) || email.includes(searchTerm);
+            });
+
+            renderAttendeeList();
+        }
+
+        // Check in attendee
+        async function checkInAttendee(attendeeId) {
+            const slug = getSlug();
+            try {
+                const response = await fetch(`/api/events/${slug}/attendees/${attendeeId}/checkin`, {
+                    method: 'POST'
+                });
+                if (!response.ok) throw new Error('Failed to check in attendee');
+                
+                // Update local data
+                const attendee = attendeesData.find(a => a.id === attendeeId);
+                if (attendee) {
+                    attendee.checked_in = true;
+                    attendee.checked_in_at = new Date().toISOString();
+                }
+
+                updateStats();
+                renderAttendeeList();
+                initializeChart();
+            } catch (error) {
+                console.error('Error checking in attendee:', error);
+                alert('Failed to check in attendee');
+            }
+        }
+
+        // Delete event
+        async function deleteEvent(event) {
+            event.preventDefault();
+            
+            if (!confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+                return;
+            }
+
+            const slug = getSlug();
+            try {
+                const response = await fetch(`/api/events/${slug}`, {
+                    method: 'DELETE'
+                });
+                if (!response.ok) throw new Error('Failed to delete event');
+                
+                window.location.href = '/my-events';
+            } catch (error) {
+                console.error('Error deleting event:', error);
+                alert('Failed to delete event');
+            }
+        }
+
+        // Cancel event
+        async function cancelEvent(slug) {
+            try {
+                const response = await fetch(`/api/events/${slug}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: 'cancelled' })
+                });
+                if (!response.ok) throw new Error('Failed to cancel event');
+                
+                const data = await response.json();
+                eventData = data;
+                renderStatusControls();
+            } catch (error) {
+                console.error('Error cancelling event:', error);
+                alert('Failed to cancel event');
+            }
+        }
+
+        // Unpublish event
+        async function unpublishEvent(slug) {
+            try {
+                const response = await fetch(`/api/events/${slug}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: 'published' })
+                });
+                if (!response.ok) throw new Error('Failed to update event status');
+                
+                const data = await response.json();
+                eventData = data;
+                renderStatusControls();
+            } catch (error) {
+                console.error('Error updating event status:', error);
+                alert('Failed to update event status');
+            }
+        }
+
+        // Navigation functions
+        function viewEvent(event) {
+            event.preventDefault();
+            const slug = getSlug();
+            window.location.href = `/event/${slug}`;
+        }
+
+        function openQRCheckin(event) {
+            event.preventDefault();
+            const slug = getSlug();
+            window.location.href = `/event/${slug}/checkin`;
+        }
+
+        function editEvent(event) {
+            event.preventDefault();
+            const slug = getSlug();
+            window.location.href = `/event/${slug}/edit`;
+        }
+    </script>
 </body>
 </html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Events — Gather</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body { font-family: 'Inter', -apple-system, sans-serif; }</style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="logo">
+      <span class="logo-dot"></span>
+      gather
+    </a>
+    <div class="nav-actions" id="nav-actions"></div>
+  </nav>
+
+  <div class="dashboard-page">
+    <div class="container-wide">
+      <div id="loading" class="loading"><div class="spinner"></div></div>
+      <div id="content" style="display:none;"></div>
+    </div>
+  </div>
+
+  <script>
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    function formatDate(dateStr) {
+      const d = new Date(dateStr + 'T00:00:00');
+      return { month: months[d.getMonth()], day: d.getDate() };
+    }
+
+    function formatTime(timeStr) {
+      const [h, m] = timeStr.split(':');
+      const hour = parseInt(h);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const h12 = hour % 12 || 12;
+      return `${h12}:${m} ${ampm}`;
+    }
+
+    async function load() {
+      // Check auth
+      const meRes = await fetch('/api/me');
+      const meData = await meRes.json();
+
+      if (!meData.user) {
+        window.location.href = '/login?redirect=/my-events';
+        return;
+      }
+
+      // Update nav
+      document.getElementById('nav-actions').innerHTML = `
+        <a href="/create" class="btn btn-primary btn-sm">Create Event</a>
+        <button class="btn btn-ghost btn-sm" id="logout-btn">${meData.user.name}</button>
+      `;
+
+      document.getElementById('logout-btn').addEventListener('click', async () => {
+        await fetch('/api/auth/logout', { method: 'POST' });
+        window.location.href = '/';
+      });
+
+      // Load events
+      try {
+        const res = await fetch('/api/my-events');
+        if (!res.ok) throw new Error('Failed to load');
+        const events = await res.json();
+
+        let content = `
+          <div class="dashboard-header">
+            <div>
+              <h1>My Events</h1>
+              <p class="text-muted text-sm">Manage your in-person gatherings</p>
+            </div>
+            <a href="/create" class="btn btn-primary">Create Event</a>
+          </div>
+        `;
+
+        if (events.length === 0) {
+          content += `
+            <div class="empty-state">
+              <div class="empty-state-icon">📅</div>
+              <h3>No events yet</h3>
+              <p>Create your first event to get started</p>
+              <a href="/create" class="btn btn-primary mt-4">Create Event</a>
+            </div>
+          `;
+        } else {
+          content += `<div class="events-grid">`;
+          content += events.map(event => {
+            const { month, day } = formatDate(event.date);
+            return `
+              <div class="card event-card" style="display: flex; justify-content: space-between;">
+                <div style="display: flex; gap: 20px; align-items: flex-start;">
+                  <div class="event-date-box">
+                    <div class="event-date-month">${month}</div>
+                    <div class="event-date-day">${day}</div>
+                  </div>
+                  <div class="event-info">
+                    <h3>${event.title}</h3>
+                    <div class="event-meta">
+                      <span class="event-meta-item">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                        ${formatTime(event.start_time)}
+                      </span>
+                      <span class="event-meta-item">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        ${event.location.length > 30 ? event.location.substring(0, 30) + '…' : event.location}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center; flex-shrink: 0;">
+                  <a href="/event/${event.slug}" class="btn btn-ghost btn-sm">View</a>
+                  <a href="/event/${event.slug}/dashboard" class="btn btn-outline btn-sm">Dashboard</a>
+                  <a href="/event/${event.slug}/checkin" class="btn btn-primary btn-sm">Check-in</a>
+                </div>
+              </div>
+            `;
+          }).join('');
+          content += `</div>`;
+        }
+
+        document.getElementById('content').innerHTML = content;
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+
+      } catch (err) {
+        document.getElementById('loading').innerHTML = '<p class="text-center text-muted">Failed to load events</p>';
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>

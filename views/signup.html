@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up — Gather</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body { font-family: 'Inter', -apple-system, sans-serif; }</style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="logo">
+      <span class="logo-dot"></span>
+      gather
+    </a>
+  </nav>
+
+  <div class="register-page">
+    <div class="container">
+      <h2>Create your account</h2>
+      <p class="text-muted">Start hosting beautiful in-person events.</p>
+
+      <form id="signup-form" class="mt-8">
+        <div class="form-group">
+          <label class="form-label" for="name">Full Name</label>
+          <input type="text" id="name" class="form-input" placeholder="Your name" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="email">Email</label>
+          <input type="email" id="email" class="form-input" placeholder="you@example.com" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input type="password" id="password" class="form-input" placeholder="At least 6 characters" required minlength="6">
+        </div>
+
+        <div class="mt-6">
+          <button type="submit" class="btn btn-primary btn-lg btn-full" id="submit-btn">
+            Create Account
+          </button>
+        </div>
+
+        <div id="error-msg" class="mt-4 text-center text-sm" style="color: var(--red); display: none;"></div>
+
+        <p class="text-center text-sm text-muted mt-6">
+          Already have an account? <a href="/login" style="color: var(--accent); font-weight: 600;">Log in</a>
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('signup-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      const errorMsg = document.getElementById('error-msg');
+      btn.disabled = true;
+      btn.textContent = 'Creating account...';
+      errorMsg.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value,
+          }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Signup failed');
+        }
+
+        window.location.href = '/my-events';
+      } catch (err) {
+        errorMsg.textContent = err.message;
+        errorMsg.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+      }
+    });
+  </script>
+</body>
+</html>

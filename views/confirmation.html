@@ -6,27 +6,24 @@
   <title>You're In! — Gather</title>
   <link rel="stylesheet" href="/css/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>body { font-family: 'Inter', -apple-system, sans-serif; }</style>
+  <style>body { font-family: 'Inter', -apple-system, sans-serif; }
+  .cal-buttons { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+  .cal-buttons a { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border: 1.5px solid var(--gray-200); border-radius: 10px; font-size: 0.875rem; font-weight: 600; color: var(--gray-700); transition: all 150ms ease; }
+  .cal-buttons a:hover { border-color: var(--gray-300); background: var(--gray-50); }
+  </style>
 </head>
 <body>
   <nav class="navbar">
-    <a href="/" class="logo">
-      <span class="logo-dot"></span>
-      gather
-    </a>
+    <a href="/" class="logo"><span class="logo-dot"></span> gather</a>
   </nav>
 
   <div class="confirmation-page">
     <div class="container">
       <div id="loading" class="loading"><div class="spinner"></div></div>
-
       <div id="confirmation-content" style="display:none;">
         <div class="success-icon">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5">
-            <path d="M20 6L9 17l-5-5"/>
-          </svg>
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
         </div>
-
         <h1>You're in!</h1>
         <p class="text-muted">Your spot has been reserved. Show this QR code at the door.</p>
 
@@ -37,35 +34,27 @@
 
         <div class="confirmation-details">
           <div class="card">
-            <div class="event-detail-item" style="border: none; padding: 8px 0;">
+            <div class="event-detail-item" style="border:none;padding:8px 0;">
               <div class="event-detail-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
               </div>
               <div class="event-detail-text">
                 <h4 id="detail-event"></h4>
                 <p id="detail-datetime"></p>
               </div>
             </div>
-
-            <div class="event-detail-item" style="border: none; padding: 8px 0;">
+            <div class="event-detail-item" style="border:none;padding:8px 0;">
               <div class="event-detail-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
-                </svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
               </div>
               <div class="event-detail-text">
                 <h4>Location</h4>
                 <p id="detail-location"></p>
               </div>
             </div>
-
-            <div class="event-detail-item" style="border: none; padding: 8px 0;">
+            <div class="event-detail-item" style="border:none;padding:8px 0;">
               <div class="event-detail-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                </svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               </div>
               <div class="event-detail-text">
                 <h4 id="detail-name"></h4>
@@ -75,8 +64,11 @@
           </div>
         </div>
 
-        <div class="mt-8">
+        <div class="cal-buttons" id="cal-buttons"></div>
+
+        <div class="mt-6" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
           <a id="event-link" href="#" class="btn btn-outline">View Event Page</a>
+          <a id="cancel-link" href="#" class="btn btn-ghost btn-sm" style="color:var(--red);">Cancel my RSVP</a>
         </div>
       </div>
     </div>
@@ -86,22 +78,18 @@
     const parts = window.location.pathname.split('/');
     const slug = parts[2];
     const attendeeId = parts[4];
-
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-    function formatTime(timeStr) {
-      const [h, m] = timeStr.split(':');
-      const hour = parseInt(h);
-      const ampm = hour >= 12 ? 'PM' : 'AM';
-      const h12 = hour % 12 || 12;
-      return `${h12}:${m} ${ampm}`;
+    function formatTime(t) { const [h,m]=t.split(':'); const hr=parseInt(h); return `${hr%12||12}:${m} ${hr>=12?'PM':'AM'}`; }
+
+    function toICSDate(dateStr, timeStr) {
+      return dateStr.replace(/-/g, '') + 'T' + timeStr.replace(':', '') + '00';
     }
 
     async function load() {
       try {
         const res = await fetch(`/api/attendees/${attendeeId}`);
         const data = await res.json();
-
         const event = data.event;
 
         document.title = `You're In — ${event.title}`;
@@ -111,11 +99,39 @@
         const d = new Date(event.date + 'T00:00:00');
         document.getElementById('detail-datetime').textContent =
           `${months[d.getMonth()]} ${d.getDate()} · ${formatTime(event.start_time)} – ${formatTime(event.end_time)}`;
-
         document.getElementById('detail-location').textContent = event.location;
         document.getElementById('detail-name').textContent = data.name;
         document.getElementById('detail-email').textContent = data.email;
         document.getElementById('event-link').href = `/event/${slug}`;
+
+        if (data.cancel_token) {
+          document.getElementById('cancel-link').href = `/cancel/${attendeeId}/${data.cancel_token}`;
+        } else {
+          document.getElementById('cancel-link').style.display = 'none';
+        }
+
+        // Calendar buttons
+        const gcalStart = toICSDate(event.date, event.start_time);
+        const gcalEnd = toICSDate(event.date, event.end_time);
+        const gcalUrl = `https://calendar.google.com/calendar/event?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${gcalStart}/${gcalEnd}&location=${encodeURIComponent(event.location)}&details=${encodeURIComponent(event.description || '')}`;
+
+        const icsContent = ['BEGIN:VCALENDAR','VERSION:2.0','BEGIN:VEVENT',
+          `DTSTART:${gcalStart}`,`DTEND:${gcalEnd}`,
+          `SUMMARY:${event.title}`,`LOCATION:${event.location}`,
+          `DESCRIPTION:${(event.description||'').replace(/\n/g,'\\n')}`,
+          'END:VEVENT','END:VCALENDAR'].join('\r\n');
+        const icsUrl = URL.createObjectURL(new Blob([icsContent], {type:'text/calendar'}));
+
+        document.getElementById('cal-buttons').innerHTML = `
+          <a href="${gcalUrl}" target="_blank">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Add to Google Calendar
+          </a>
+          <a href="${icsUrl}" download="${event.slug}.ics">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Add to Apple Calendar
+          </a>
+        `;
 
         document.getElementById('loading').style.display = 'none';
         document.getElementById('confirmation-content').style.display = 'block';

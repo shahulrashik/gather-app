@@ -1,174 +1,498 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Create Event — Gather</title>
-  <link rel="stylesheet" href="/css/style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>body { font-family: 'Inter', -apple-system, sans-serif; }</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Event - Gather</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .create-page {
+            min-height: 100vh;
+            background: #f9fafb;
+            padding: 2rem 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        .page-header {
+            margin-bottom: 3rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 0 0 0.5rem 0;
+        }
+
+        .page-header p {
+            color: #6b7280;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: white;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-row .form-group {
+            margin-bottom: 0;
+        }
+
+        .form-hint {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.5rem;
+        }
+
+        .section-divider {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 2rem 0;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 2rem 0 1.5rem 0;
+        }
+
+        /* Ticket Toggle */
+        .ticket-toggle {
+            display: flex;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 2px solid #d1d5db;
+            background: white;
+            color: #6b7280;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn.active {
+            border-color: #7c3aed;
+            background: #7c3aed;
+            color: white;
+        }
+
+        .price-field {
+            display: none;
+        }
+
+        .price-field.show {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Color & Gradient Swatches */
+        .swatches-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+
+        .swatch {
+            cursor: pointer;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: inline-block;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .swatch:hover {
+            transform: scale(1.1);
+        }
+
+        .swatch.selected {
+            box-shadow: 0 0 0 3px #7c3aed;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #7c3aed;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #6d28d9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-lg {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        /* Form Container */
+        .form-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Navbar */
+        nav {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        nav .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #7c3aed;
+        }
+
+        #nav-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .container {
+                padding: 0 1rem;
+            }
+
+            .form-container {
+                padding: 1.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
-  <nav class="navbar">
-    <a href="/" class="logo">
-      <span class="logo-dot"></span>
-      gather
-    </a>
-  </nav>
+    <nav>
+        <div class="logo">Gather</div>
+        <div id="nav-actions"></div>
+    </nav>
 
-  <div class="create-page">
-    <div class="container">
-      <h1>Create an event</h1>
-      <p class="text-muted">Fill in the details for your in-person gathering.</p>
+    <div class="create-page">
+        <div class="container">
+            <div class="page-header">
+                <h1>Create New Event</h1>
+                <p>Fill in the details below to create your event</p>
+            </div>
 
-      <form id="create-form" class="create-form">
-        <!-- Basic Info -->
-        <div class="form-group">
-          <label class="form-label" for="title">Event Title</label>
-          <input type="text" id="title" class="form-input" placeholder="e.g. Design Meetup SF" required>
+            <div class="form-container">
+                <form id="createEventForm">
+                    <!-- Basic Information Section -->
+                    <div class="form-group">
+                        <label class="form-label">Event Title *</label>
+                        <input type="text" class="form-input" name="title" placeholder="Give your event a title" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Description *</label>
+                        <textarea class="form-textarea" name="description" placeholder="Describe your event in detail..." required></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Date *</label>
+                            <input type="date" class="form-input" name="event_date" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Start Time *</label>
+                            <input type="time" class="form-input" name="start_time" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">End Time *</label>
+                            <input type="time" class="form-input" name="end_time" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Location *</label>
+                            <input type="text" class="form-input" name="location" placeholder="Where is your event?" required>
+                            <p class="form-hint">Tip: Use Google Maps to get the exact address</p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Capacity *</label>
+                        <input type="number" class="form-input" name="capacity" placeholder="How many attendees?" min="1" required>
+                    </div>
+
+                    <div class="section-divider"></div>
+
+                    <!-- Ticketing Section -->
+                    <div class="section-title">Ticketing</div>
+
+                    <div class="form-group">
+                        <label class="form-label">Ticket Type *</label>
+                        <div class="ticket-toggle">
+                            <button type="button" class="toggle-btn active" data-type="free">Free</button>
+                            <button type="button" class="toggle-btn" data-type="paid">Paid</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group price-field" id="priceField">
+                        <label class="form-label">Ticket Price *</label>
+                        <input type="number" class="form-input" name="ticket_price" placeholder="0.00" step="0.01" min="0">
+                    </div>
+
+                    <input type="hidden" name="is_paid" value="false">
+
+                    <div class="section-divider"></div>
+
+                    <!-- Event URL & Customization Section -->
+                    <div class="section-title">Customization</div>
+
+                    <div class="form-group">
+                        <label class="form-label">Custom Event URL</label>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="color: #6b7280;">gather.app/event/</span>
+                            <input type="text" class="form-input" name="custom_slug" placeholder="your-custom-url" style="flex: 1;">
+                        </div>
+                        <p class="form-hint">Leave empty for an auto-generated URL. Use lowercase letters, numbers, and hyphens only.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Cover Gradient</label>
+                        <div class="swatches-row" id="gradientSwatches">
+                            <div class="swatch" 
+                                 data-gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)" 
+                                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                            <div class="swatch" 
+                                 data-gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" 
+                                 style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>
+                            <div class="swatch" 
+                                 data-gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" 
+                                 style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"></div>
+                            <div class="swatch" 
+                                 data-gradient="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)" 
+                                 style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);"></div>
+                            <div class="swatch" 
+                                 data-gradient="linear-gradient(135deg, #fa709a 0%, #fee140 100%)" 
+                                 style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);"></div>
+                            <div class="swatch" 
+                                 data-gradient="linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)" 
+                                 style="background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);"></div>
+                        </div>
+                        <input type="hidden" name="cover_gradient" value="">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Accent Color</label>
+                        <div class="swatches-row" id="colorSwatches">
+                            <div class="swatch" data-color="#7c3aed" style="background: #7c3aed;"></div>
+                            <div class="swatch" data-color="#2563eb" style="background: #2563eb;"></div>
+                            <div class="swatch" data-color="#059669" style="background: #059669;"></div>
+                            <div class="swatch" data-color="#dc2626" style="background: #dc2626;"></div>
+                            <div class="swatch" data-color="#d97706" style="background: #d97706;"></div>
+                            <div class="swatch" data-color="#0891b2" style="background: #0891b2;"></div>
+                        </div>
+                        <input type="hidden" name="accent_color" value="#7c3aed">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Event Status *</label>
+                        <select class="form-select" name="status" required>
+                            <option value="published">Published</option>
+                            <option value="draft">Draft</option>
+                        </select>
+                    </div>
+
+                    <div class="section-divider"></div>
+
+                    <button type="submit" class="btn btn-primary btn-lg btn-full">Create Event</button>
+                </form>
+            </div>
         </div>
-
-        <div class="form-group">
-          <label class="form-label" for="description">Description</label>
-          <textarea id="description" class="form-textarea" placeholder="Tell people what your event is about..."></textarea>
-        </div>
-
-        <hr class="section-divider">
-
-        <!-- Date & Time -->
-        <div class="form-group">
-          <label class="form-label" for="date">Date</label>
-          <input type="date" id="date" class="form-input" required>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="start_time">Start Time</label>
-            <input type="time" id="start_time" class="form-input" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="end_time">End Time</label>
-            <input type="time" id="end_time" class="form-input" required>
-          </div>
-        </div>
-
-        <hr class="section-divider">
-
-        <!-- Location -->
-        <div class="form-group">
-          <label class="form-label" for="location">Location</label>
-          <input type="text" id="location" class="form-input" placeholder="e.g. 123 Market St, San Francisco, CA" required>
-          <p class="form-hint">Full address for the Google Maps embed</p>
-        </div>
-
-        <hr class="section-divider">
-
-        <!-- Capacity & Tickets -->
-        <div class="form-group">
-          <label class="form-label" for="capacity">Capacity</label>
-          <input type="number" id="capacity" class="form-input" value="50" min="1" required>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Ticket Type</label>
-          <div class="ticket-toggle">
-            <input type="radio" name="ticket_type" id="ticket-free" value="free" checked>
-            <label for="ticket-free">Free</label>
-            <input type="radio" name="ticket_type" id="ticket-paid" value="paid">
-            <label for="ticket-paid">Paid</label>
-          </div>
-        </div>
-
-        <div class="form-group price-field" id="price-field">
-          <label class="form-label" for="price">Ticket Price ($)</label>
-          <input type="number" id="price" class="form-input" placeholder="0.00" min="0" step="0.01">
-        </div>
-
-        <hr class="section-divider">
-
-        <!-- Host Info -->
-        <div class="form-group">
-          <label class="form-label" for="host_name">Your Name</label>
-          <input type="text" id="host_name" class="form-input" placeholder="Your name">
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="host_email">Your Email</label>
-          <input type="email" id="host_email" class="form-input" placeholder="you@example.com">
-          <p class="form-hint">We'll use this for event management</p>
-        </div>
-
-        <div class="mt-8">
-          <button type="submit" class="btn btn-primary btn-lg btn-full" id="submit-btn">
-            Create Event
-          </button>
-        </div>
-
-        <div id="error-msg" class="mt-4 text-center text-sm" style="color: var(--red); display: none;"></div>
-      </form>
     </div>
-  </div>
 
-  <script>
-    // Ticket type toggle
-    document.querySelectorAll('input[name="ticket_type"]').forEach(input => {
-      input.addEventListener('change', () => {
-        const priceField = document.getElementById('price-field');
-        if (input.value === 'paid' && input.checked) {
-          priceField.classList.add('visible');
-        } else if (input.value === 'free' && input.checked) {
-          priceField.classList.remove('visible');
-        }
-      });
-    });
+    <script src="/js/auth.js"></script>
+    <script>
+        // Initialize auth
+        requireLogin('/create');
+        updateNav();
 
-    // Form submission
-    document.getElementById('create-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
+        const form = document.getElementById('createEventForm');
+        const priceField = document.getElementById('priceField');
+        const isPaidInput = document.querySelector('input[name="is_paid"]');
+        const toggleBtns = document.querySelectorAll('.toggle-btn');
+        const gradientSwatches = document.querySelectorAll('#gradientSwatches .swatch');
+        const colorSwatches = document.querySelectorAll('#colorSwatches .swatch');
 
-      const btn = document.getElementById('submit-btn');
-      const errorMsg = document.getElementById('error-msg');
-      btn.disabled = true;
-      btn.textContent = 'Creating...';
-      errorMsg.style.display = 'none';
+        // Ticket type toggle
+        toggleBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                toggleBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
 
-      const ticketType = document.querySelector('input[name="ticket_type"]:checked').value;
+                const isFreePlan = btn.dataset.type === 'free';
+                isPaidInput.value = !isFreePlan;
+                priceField.classList.toggle('show', !isFreePlan);
 
-      const data = {
-        title: document.getElementById('title').value,
-        description: document.getElementById('description').value,
-        date: document.getElementById('date').value,
-        start_time: document.getElementById('start_time').value,
-        end_time: document.getElementById('end_time').value,
-        location: document.getElementById('location').value,
-        capacity: parseInt(document.getElementById('capacity').value),
-        ticket_type: ticketType,
-        price: ticketType === 'paid' ? parseFloat(document.getElementById('price').value) || 0 : 0,
-        host_name: document.getElementById('host_name').value,
-        host_email: document.getElementById('host_email').value,
-      };
-
-      try {
-        const res = await fetch('/api/events', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
+                if (isFreePlan) {
+                    document.querySelector('input[name="ticket_price"]').removeAttribute('required');
+                } else {
+                    document.querySelector('input[name="ticket_price"]').setAttribute('required', 'required');
+                }
+            });
         });
 
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.error || 'Failed to create event');
-        }
+        // Gradient swatch selection
+        gradientSwatches.forEach(swatch => {
+            swatch.addEventListener('click', () => {
+                gradientSwatches.forEach(s => s.classList.remove('selected'));
+                swatch.classList.add('selected');
+                document.querySelector('input[name="cover_gradient"]').value = swatch.dataset.gradient;
+            });
+        });
 
-        const result = await res.json();
-        window.location.href = `/event/${result.slug}`;
-      } catch (err) {
-        errorMsg.textContent = err.message;
-        errorMsg.style.display = 'block';
-        btn.disabled = false;
-        btn.textContent = 'Create Event';
-      }
-    });
-  </script>
+        // Color swatch selection
+        colorSwatches.forEach(swatch => {
+            swatch.addEventListener('click', () => {
+                colorSwatches.forEach(s => s.classList.remove('selected'));
+                swatch.classList.add('selected');
+                document.querySelector('input[name="accent_color"]').value = swatch.dataset.color;
+            });
+        });
+
+        // Set default selections
+        if (gradientSwatches.length > 0) {
+            gradientSwatches[0].classList.add('selected');
+            document.querySelector('input[name="cover_gradient"]').value = gradientSwatches[0].dataset.gradient;
+        }
+        colorSwatches[0].classList.add('selected');
+
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+            const data = {
+                title: formData.get('title'),
+                description: formData.get('description'),
+                event_date: formData.get('event_date'),
+                start_time: formData.get('start_time'),
+                end_time: formData.get('end_time'),
+                location: formData.get('location'),
+                capacity: parseInt(formData.get('capacity')),
+                is_paid: formData.get('is_paid') === 'true',
+                ticket_price: formData.get('is_paid') === 'true' ? parseFloat(formData.get('ticket_price')) : null,
+                custom_slug: formData.get('custom_slug') || null,
+                cover_gradient: formData.get('cover_gradient'),
+                accent_color: formData.get('accent_color'),
+                status: formData.get('status')
+            };
+
+            try {
+                const response = await fetch('/api/events', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    alert('Error creating event: ' + (error.message || 'Unknown error'));
+                    return;
+                }
+
+                const result = await response.json();
+                window.location.href = `/event/${result.slug}`;
+            } catch (err) {
+                alert('Error creating event: ' + err.message);
+            }
+        });
+    </script>
 </body>
 </html>
