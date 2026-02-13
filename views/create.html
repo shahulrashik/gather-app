@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Event — Gather</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body { font-family: 'Inter', -apple-system, sans-serif; }</style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="logo">
+      <span class="logo-dot"></span>
+      gather
+    </a>
+  </nav>
+
+  <div class="create-page">
+    <div class="container">
+      <h1>Create an event</h1>
+      <p class="text-muted">Fill in the details for your in-person gathering.</p>
+
+      <form id="create-form" class="create-form">
+        <!-- Basic Info -->
+        <div class="form-group">
+          <label class="form-label" for="title">Event Title</label>
+          <input type="text" id="title" class="form-input" placeholder="e.g. Design Meetup SF" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="description">Description</label>
+          <textarea id="description" class="form-textarea" placeholder="Tell people what your event is about..."></textarea>
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- Date & Time -->
+        <div class="form-group">
+          <label class="form-label" for="date">Date</label>
+          <input type="date" id="date" class="form-input" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="start_time">Start Time</label>
+            <input type="time" id="start_time" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="end_time">End Time</label>
+            <input type="time" id="end_time" class="form-input" required>
+          </div>
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- Location -->
+        <div class="form-group">
+          <label class="form-label" for="location">Location</label>
+          <input type="text" id="location" class="form-input" placeholder="e.g. 123 Market St, San Francisco, CA" required>
+          <p class="form-hint">Full address for the Google Maps embed</p>
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- Capacity & Tickets -->
+        <div class="form-group">
+          <label class="form-label" for="capacity">Capacity</label>
+          <input type="number" id="capacity" class="form-input" value="50" min="1" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Ticket Type</label>
+          <div class="ticket-toggle">
+            <input type="radio" name="ticket_type" id="ticket-free" value="free" checked>
+            <label for="ticket-free">Free</label>
+            <input type="radio" name="ticket_type" id="ticket-paid" value="paid">
+            <label for="ticket-paid">Paid</label>
+          </div>
+        </div>
+
+        <div class="form-group price-field" id="price-field">
+          <label class="form-label" for="price">Ticket Price ($)</label>
+          <input type="number" id="price" class="form-input" placeholder="0.00" min="0" step="0.01">
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- Host Info -->
+        <div class="form-group">
+          <label class="form-label" for="host_name">Your Name</label>
+          <input type="text" id="host_name" class="form-input" placeholder="Your name">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="host_email">Your Email</label>
+          <input type="email" id="host_email" class="form-input" placeholder="you@example.com">
+          <p class="form-hint">We'll use this for event management</p>
+        </div>
+
+        <div class="mt-8">
+          <button type="submit" class="btn btn-primary btn-lg btn-full" id="submit-btn">
+            Create Event
+          </button>
+        </div>
+
+        <div id="error-msg" class="mt-4 text-center text-sm" style="color: var(--red); display: none;"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Ticket type toggle
+    document.querySelectorAll('input[name="ticket_type"]').forEach(input => {
+      input.addEventListener('change', () => {
+        const priceField = document.getElementById('price-field');
+        if (input.value === 'paid' && input.checked) {
+          priceField.classList.add('visible');
+        } else if (input.value === 'free' && input.checked) {
+          priceField.classList.remove('visible');
+        }
+      });
+    });
+
+    // Form submission
+    document.getElementById('create-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const btn = document.getElementById('submit-btn');
+      const errorMsg = document.getElementById('error-msg');
+      btn.disabled = true;
+      btn.textContent = 'Creating...';
+      errorMsg.style.display = 'none';
+
+      const ticketType = document.querySelector('input[name="ticket_type"]:checked').value;
+
+      const data = {
+        title: document.getElementById('title').value,
+        description: document.getElementById('description').value,
+        date: document.getElementById('date').value,
+        start_time: document.getElementById('start_time').value,
+        end_time: document.getElementById('end_time').value,
+        location: document.getElementById('location').value,
+        capacity: parseInt(document.getElementById('capacity').value),
+        ticket_type: ticketType,
+        price: ticketType === 'paid' ? parseFloat(document.getElementById('price').value) || 0 : 0,
+        host_name: document.getElementById('host_name').value,
+        host_email: document.getElementById('host_email').value,
+      };
+
+      try {
+        const res = await fetch('/api/events', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to create event');
+        }
+
+        const result = await res.json();
+        window.location.href = `/event/${result.slug}`;
+      } catch (err) {
+        errorMsg.textContent = err.message;
+        errorMsg.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Create Event';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Check-in — Gather</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    body { font-family: 'Inter', -apple-system, sans-serif; }
+
+    #qr-reader {
+      width: 100%;
+      max-width: 400px;
+      margin: 24px auto;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1.5px solid var(--gray-200);
+    }
+
+    #qr-reader video { border-radius: 16px; }
+
+    /* Override html5-qrcode styles */
+    #qr-reader__scan_region { border: none !important; }
+    #qr-reader__dashboard { padding: 12px !important; }
+    #qr-reader__dashboard_section { padding: 0 !important; }
+    #qr-reader__dashboard_section_csr button {
+      background: var(--gray-900) !important;
+      color: white !important;
+      border: none !important;
+      padding: 10px 20px !important;
+      border-radius: 8px !important;
+      font-weight: 600 !important;
+      cursor: pointer !important;
+    }
+
+    .manual-entry {
+      max-width: 400px;
+      margin: 24px auto 0;
+    }
+
+    .manual-input-row {
+      display: flex;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="logo">
+      <span class="logo-dot"></span>
+      gather
+    </a>
+    <div class="nav-actions" id="nav-actions"></div>
+  </nav>
+
+  <div class="checkin-page">
+    <div class="container">
+      <a id="back-link" href="#" class="btn btn-ghost btn-sm mb-4" style="display: inline-flex;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Dashboard
+      </a>
+
+      <h1>QR Check-in</h1>
+      <p class="text-muted">Scan attendee QR codes to check them in</p>
+
+      <div id="qr-reader"></div>
+
+      <div id="checkin-result" class="checkin-result">
+        <h3 id="result-title"></h3>
+        <p id="result-message"></p>
+      </div>
+
+      <div class="manual-entry">
+        <p class="text-sm text-muted mb-2" style="text-align: left;">Or search by name or email:</p>
+        <div class="manual-input-row">
+          <input type="text" id="manual-input" class="form-input" placeholder="Search attendee...">
+          <button class="btn btn-primary btn-sm" id="manual-search-btn">Search</button>
+        </div>
+        <div id="manual-results" class="mt-4"></div>
+      </div>
+
+      <div class="mt-8" id="stats-display"></div>
+    </div>
+  </div>
+
+  <script>
+    const slug = window.location.pathname.split('/')[2];
+    document.getElementById('back-link').href = `/event/${slug}/dashboard`;
+    document.getElementById('nav-actions').innerHTML = `
+      <a href="/event/${slug}/dashboard" class="btn btn-ghost btn-sm">Dashboard</a>
+    `;
+
+    let isProcessing = false;
+
+    // QR Scanner
+    const scanner = new Html5Qrcode("qr-reader");
+
+    function showResult(type, title, message) {
+      const el = document.getElementById('checkin-result');
+      el.className = `checkin-result show ${type}`;
+      document.getElementById('result-title').textContent = title;
+      document.getElementById('result-message').textContent = message;
+
+      setTimeout(() => {
+        el.className = 'checkin-result';
+        isProcessing = false;
+      }, 3000);
+    }
+
+    async function processCheckin(qrData) {
+      if (isProcessing) return;
+      isProcessing = true;
+
+      try {
+        const res = await fetch('/api/checkin/qr', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ qrData }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showResult('error', 'Invalid QR Code', data.error || 'Could not process this QR code');
+          return;
+        }
+
+        if (data.already_checked_in) {
+          showResult('warning', 'Already Checked In', `${data.attendee.name} was already checked in`);
+        } else {
+          showResult('success', 'Checked In!', `Welcome, ${data.attendee.name}`);
+        }
+
+        loadStats();
+      } catch (err) {
+        showResult('error', 'Error', 'Failed to process check-in');
+      }
+    }
+
+    // Start scanner
+    Html5Qrcode.getCameras().then(cameras => {
+      if (cameras && cameras.length) {
+        scanner.start(
+          cameras[0].id,
+          { fps: 10, qrbox: { width: 200, height: 200 } },
+          (decodedText) => processCheckin(decodedText),
+          () => {}
+        ).catch(err => {
+          document.getElementById('qr-reader').innerHTML = `
+            <div style="padding: 40px; text-align: center;">
+              <p class="text-muted">Camera not available.</p>
+              <p class="text-sm text-muted mt-2">Use the search below to check in attendees manually.</p>
+            </div>
+          `;
+        });
+      } else {
+        document.getElementById('qr-reader').innerHTML = `
+          <div style="padding: 40px; text-align: center;">
+            <p class="text-muted">No camera found.</p>
+            <p class="text-sm text-muted mt-2">Use the search below to check in attendees manually.</p>
+          </div>
+        `;
+      }
+    }).catch(() => {
+      document.getElementById('qr-reader').innerHTML = `
+        <div style="padding: 40px; text-align: center;">
+          <p class="text-muted">Camera access denied.</p>
+          <p class="text-sm text-muted mt-2">Use the search below to check in attendees manually.</p>
+        </div>
+      `;
+    });
+
+    // Manual search
+    async function manualSearch() {
+      const query = document.getElementById('manual-input').value.toLowerCase().trim();
+      if (!query) return;
+
+      try {
+        const res = await fetch(`/api/events/${slug}/attendees`);
+        const data = await res.json();
+
+        const matches = data.attendees.filter(a =>
+          a.name.toLowerCase().includes(query) || a.email.toLowerCase().includes(query)
+        );
+
+        const container = document.getElementById('manual-results');
+
+        if (matches.length === 0) {
+          container.innerHTML = '<p class="text-sm text-muted">No attendees found</p>';
+          return;
+        }
+
+        container.innerHTML = matches.map(a => `
+          <div class="attendee-row" style="border: 1px solid var(--gray-200); border-radius: 8px; margin-bottom: 8px;">
+            <div class="attendee-info">
+              <div class="attendee-name">${a.name}</div>
+              <div class="attendee-email">${a.email}</div>
+            </div>
+            <div class="attendee-actions">
+              ${a.checked_in
+                ? '<span class="badge badge-checked">✓ Checked in</span>'
+                : `<button class="btn btn-sm btn-primary manual-checkin-btn" data-id="${a.id}">Check in</button>`}
+            </div>
+          </div>
+        `).join('');
+
+        container.querySelectorAll('.manual-checkin-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            btn.textContent = '...';
+            try {
+              await fetch(`/api/attendees/${btn.dataset.id}/checkin`, { method: 'POST' });
+              showResult('success', 'Checked In!', 'Attendee has been checked in');
+              manualSearch(); // refresh
+              loadStats();
+            } catch {
+              btn.disabled = false;
+              btn.textContent = 'Check in';
+            }
+          });
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    document.getElementById('manual-search-btn').addEventListener('click', manualSearch);
+    document.getElementById('manual-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') manualSearch();
+    });
+
+    // Stats
+    async function loadStats() {
+      try {
+        const res = await fetch(`/api/events/${slug}/attendees`);
+        const data = await res.json();
+        document.getElementById('stats-display').innerHTML = `
+          <div class="card" style="text-align: center;">
+            <span style="font-size: 2rem; font-weight: 800; color: var(--gray-900);">${data.checked_in}</span>
+            <span style="color: var(--gray-500); font-weight: 500;"> / ${data.total}</span>
+            <p class="text-sm text-muted mt-2">checked in</p>
+          </div>
+        `;
+      } catch {}
+    }
+
+    loadStats();
+  </script>
+</body>
+</html>

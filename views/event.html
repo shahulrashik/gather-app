@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event — Gather</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body { font-family: 'Inter', -apple-system, sans-serif; }</style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="logo">
+      <span class="logo-dot"></span>
+      gather
+    </a>
+    <div class="nav-actions" id="nav-actions"></div>
+  </nav>
+
+  <div class="event-page">
+    <div class="container-wide">
+      <div id="loading" class="loading"><div class="spinner"></div></div>
+      <div id="event-content" style="display:none;"></div>
+    </div>
+  </div>
+
+  <script>
+    const slug = window.location.pathname.split('/')[2];
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+    function formatTime(timeStr) {
+      const [h, m] = timeStr.split(':');
+      const hour = parseInt(h);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const h12 = hour % 12 || 12;
+      return `${h12}:${m} ${ampm}`;
+    }
+
+    function formatFullDate(dateStr) {
+      const d = new Date(dateStr + 'T00:00:00');
+      return `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+    }
+
+    async function loadEvent() {
+      try {
+        const res = await fetch(`/api/events/${slug}`);
+        if (!res.ok) throw new Error('Event not found');
+        const event = await res.json();
+
+        document.title = `${event.title} — Gather`;
+
+        // Nav actions for host
+        document.getElementById('nav-actions').innerHTML = `
+          <a href="/event/${slug}/dashboard" class="btn btn-ghost btn-sm">Dashboard</a>
+        `;
+
+        const spotsLeft = Math.max(0, event.capacity - event.rsvp_count);
+        const isFull = spotsLeft === 0;
+
+        const mapQuery = encodeURIComponent(event.location);
+
+        document.getElementById('event-content').innerHTML = `
+          <div class="event-layout">
+            <div class="event-main">
+              <div class="event-header">
+                <span class="badge ${event.ticket_type === 'free' ? 'badge-free' : 'badge-paid'}">
+                  ${event.ticket_type === 'free' ? '✦ Free Event' : '✦ $' + parseFloat(event.price).toFixed(0)}
+                </span>
+                <h1>${event.title}</h1>
+                ${event.description ? `<p class="event-header-desc">${event.description}</p>` : ''}
+              </div>
+
+              <div class="event-details">
+                <div class="event-detail-item">
+                  <div class="event-detail-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                  </div>
+                  <div class="event-detail-text">
+                    <h4>${formatFullDate(event.date)}</h4>
+                    <p>${formatTime(event.start_time)} – ${formatTime(event.end_time)}</p>
+                  </div>
+                </div>
+
+                <div class="event-detail-item">
+                  <div class="event-detail-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+                    </svg>
+                  </div>
+                  <div class="event-detail-text">
+                    <h4>Location</h4>
+                    <p>${event.location}</p>
+                  </div>
+                </div>
+
+                <div class="event-detail-item">
+                  <div class="event-detail-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+                    </svg>
+                  </div>
+                  <div class="event-detail-text">
+                    <h4>${spotsLeft} spots remaining</h4>
+                    <p>${event.rsvp_count} of ${event.capacity} registered</p>
+                  </div>
+                </div>
+
+                ${event.host_name ? `
+                <div class="event-detail-item">
+                  <div class="event-detail-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                    </svg>
+                  </div>
+                  <div class="event-detail-text">
+                    <h4>Hosted by</h4>
+                    <p>${event.host_name}</p>
+                  </div>
+                </div>
+                ` : ''}
+              </div>
+
+              <div class="event-map">
+                <iframe
+                  src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${mapQuery}"
+                  allowfullscreen
+                  loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade">
+                </iframe>
+              </div>
+            </div>
+
+            <div class="event-sidebar">
+              <div class="card event-register-card">
+                <p class="spots">
+                  ${isFull
+                    ? '<span style="color: var(--red); font-weight: 600;">Event is full</span>'
+                    : `<span class="spots-count">${spotsLeft}</span> spots left`}
+                </p>
+
+                ${isFull
+                  ? `<button class="btn btn-primary btn-lg btn-full" disabled>Sold Out</button>`
+                  : `<a href="/event/${slug}/register" class="btn btn-primary btn-lg btn-full">
+                      ${event.ticket_type === 'free' ? 'RSVP' : 'Get Ticket — $' + parseFloat(event.price).toFixed(0)}
+                    </a>`}
+
+                <p class="text-sm text-muted mt-4">
+                  ${event.ticket_type === 'free' ? 'Free · No payment required' : 'Secure checkout'}
+                </p>
+              </div>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('event-content').style.display = 'block';
+
+      } catch (err) {
+        document.getElementById('loading').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🔍</div>
+            <h3>Event not found</h3>
+            <p>This event may have been removed or the link is incorrect</p>
+            <a href="/" class="btn btn-outline mt-4">Go Home</a>
+          </div>
+        `;
+      }
+    }
+
+    loadEvent();
+  </script>
+</body>
+</html>

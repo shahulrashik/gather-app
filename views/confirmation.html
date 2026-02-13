@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>You're In! — Gather</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body { font-family: 'Inter', -apple-system, sans-serif; }</style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="logo">
+      <span class="logo-dot"></span>
+      gather
+    </a>
+  </nav>
+
+  <div class="confirmation-page">
+    <div class="container">
+      <div id="loading" class="loading"><div class="spinner"></div></div>
+
+      <div id="confirmation-content" style="display:none;">
+        <div class="success-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+        </div>
+
+        <h1>You're in!</h1>
+        <p class="text-muted">Your spot has been reserved. Show this QR code at the door.</p>
+
+        <div class="qr-container">
+          <img id="qr-image" src="" alt="Your QR code ticket">
+          <p class="qr-label">Your unique ticket</p>
+        </div>
+
+        <div class="confirmation-details">
+          <div class="card">
+            <div class="event-detail-item" style="border: none; padding: 8px 0;">
+              <div class="event-detail-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+              </div>
+              <div class="event-detail-text">
+                <h4 id="detail-event"></h4>
+                <p id="detail-datetime"></p>
+              </div>
+            </div>
+
+            <div class="event-detail-item" style="border: none; padding: 8px 0;">
+              <div class="event-detail-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+                </svg>
+              </div>
+              <div class="event-detail-text">
+                <h4>Location</h4>
+                <p id="detail-location"></p>
+              </div>
+            </div>
+
+            <div class="event-detail-item" style="border: none; padding: 8px 0;">
+              <div class="event-detail-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                </svg>
+              </div>
+              <div class="event-detail-text">
+                <h4 id="detail-name"></h4>
+                <p id="detail-email"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-8">
+          <a id="event-link" href="#" class="btn btn-outline">View Event Page</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const parts = window.location.pathname.split('/');
+    const slug = parts[2];
+    const attendeeId = parts[4];
+
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    function formatTime(timeStr) {
+      const [h, m] = timeStr.split(':');
+      const hour = parseInt(h);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const h12 = hour % 12 || 12;
+      return `${h12}:${m} ${ampm}`;
+    }
+
+    async function load() {
+      try {
+        const res = await fetch(`/api/attendees/${attendeeId}`);
+        const data = await res.json();
+
+        const event = data.event;
+
+        document.title = `You're In — ${event.title}`;
+        document.getElementById('qr-image').src = data.qr_code;
+        document.getElementById('detail-event').textContent = event.title;
+
+        const d = new Date(event.date + 'T00:00:00');
+        document.getElementById('detail-datetime').textContent =
+          `${months[d.getMonth()]} ${d.getDate()} · ${formatTime(event.start_time)} – ${formatTime(event.end_time)}`;
+
+        document.getElementById('detail-location').textContent = event.location;
+        document.getElementById('detail-name').textContent = data.name;
+        document.getElementById('detail-email').textContent = data.email;
+        document.getElementById('event-link').href = `/event/${slug}`;
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('confirmation-content').style.display = 'block';
+      } catch (err) {
+        document.getElementById('loading').innerHTML = '<p class="text-center text-muted">Ticket not found</p>';
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>
