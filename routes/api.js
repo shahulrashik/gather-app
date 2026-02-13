@@ -46,7 +46,7 @@ router.post('/events', requireAuth, async (req, res) => {
     const {
       title, description, date, start_time, end_time,
       location, capacity, price, ticket_type,
-      cover_gradient, accent_color, custom_slug, status
+      cover_gradient, cover_image, accent_color, custom_slug, status
     } = req.body;
 
     if (!title || !date || !start_time || !end_time || !location) {
@@ -73,11 +73,12 @@ router.post('/events', requireAuth, async (req, res) => {
     }
 
     db.run(
-      `INSERT INTO events (id, title, description, date, start_time, end_time, location, capacity, price, ticket_type, cover_gradient, accent_color, status, user_id, host_name, host_email, slug, custom_slug)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO events (id, title, description, date, start_time, end_time, location, capacity, price, ticket_type, cover_gradient, cover_image, accent_color, status, user_id, host_name, host_email, slug, custom_slug)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [id, title, description || '', date, start_time, end_time, location,
        capacity || 50, price || 0, ticket_type || 'free',
-       cover_gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+       cover_gradient || (cover_image ? null : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'),
+       cover_image || null,
        accent_color || '#7c3aed',
        status || 'published',
        user.id, user.name, user.email, slug,

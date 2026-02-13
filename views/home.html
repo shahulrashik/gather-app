@@ -3,406 +3,311 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gather - Discover Local Events</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <title>Gather</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
         body {
-            background-color: #f9f9f9;
-        }
-
-        .navbar {
-            background: white;
-            border-bottom: 1px solid #e5e5e5;
-            padding: 1rem 0;
+            min-height: 100vh;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
+            background: #fafafa;
         }
 
-        .navbar .container-wide {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+        .auth-container {
             width: 100%;
+            max-width: 400px;
+            padding: 2rem;
         }
 
         .logo {
-            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .logo h1 {
+            font-size: 2rem;
             font-weight: 700;
-            letter-spacing: -0.5px;
-            display: flex;
+            color: #1a1a1a;
+            display: inline-flex;
             align-items: center;
             gap: 0.4rem;
         }
 
         .logo-dot {
-            width: 8px;
-            height: 8px;
-            background: #9333ea;
+            width: 10px;
+            height: 10px;
+            background: #7c3aed;
             border-radius: 50%;
             display: inline-block;
         }
 
-        #nav-actions {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .hero {
-            background: white;
-            padding: 5rem 1rem;
-            text-align: center;
-            border-bottom: 1px solid #e5e5e5;
-        }
-
-        .hero-content {
-            max-width: 700px;
-            margin: 0 auto;
-        }
-
-        .hero h1 {
-            font-size: 3rem;
-            font-weight: 700;
-            margin: 0 0 1rem 0;
-            line-height: 1.2;
-            letter-spacing: -1px;
-        }
-
-        .hero p {
-            font-size: 1.1rem;
-            color: #666;
-            margin: 0 0 2rem 0;
-            line-height: 1.6;
-        }
-
-        .hero .btn-primary {
-            margin: 0;
-        }
-
-        .events-section {
-            padding: 4rem 1rem;
-        }
-
-        .events-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 2rem;
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        @media (max-width: 768px) {
-            .events-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .hero h1 {
-                font-size: 2rem;
-            }
-        }
-
-        .event-card {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid #e5e5e5;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            color: inherit;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        .event-card:hover {
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-            transform: translateY(-4px);
-        }
-
-        .event-cover {
-            height: 180px;
-            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-            position: relative;
-            overflow: hidden;
-        }
-
-        .event-cover::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-        }
-
-        .event-status {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            z-index: 2;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 0.4rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .badge-draft {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .badge-cancelled {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .event-date-box {
-            position: absolute;
-            bottom: 1rem;
-            left: 1rem;
-            background: white;
-            border-radius: 8px;
-            padding: 0.5rem 0.8rem;
-            font-weight: 600;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .event-date-month {
-            font-size: 0.7rem;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .event-date-day {
-            font-size: 1.5rem;
-            font-weight: 700;
-            line-height: 1;
-        }
-
-        .event-info {
-            padding: 1.5rem;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .event-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin: 0 0 0.5rem 0;
-            color: #1a1a1a;
-            line-height: 1.4;
-        }
-
-        .event-meta {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            margin: 1rem 0 0 0;
-            margin-top: auto;
-            padding-top: 1rem;
-            border-top: 1px solid #e5e5e5;
-        }
-
-        .event-meta-item {
-            font-size: 0.9rem;
-            color: #666;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .event-meta-item strong {
-            color: #1a1a1a;
-            font-weight: 600;
-        }
-
-        .ticket-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            padding: 0.4rem 0.8rem;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            width: fit-content;
+        .logo p {
+            color: #6b7280;
             margin-top: 0.5rem;
+            font-size: 0.95rem;
         }
 
-        .badge-free {
-            background: #dcfce7;
-            color: #166534;
+        /* Tabs */
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e5e7eb;
         }
 
-        .badge-paid {
-            background: #dbeafe;
-            color: #0c4a6e;
-        }
-
-        .empty-state {
+        .auth-tab {
+            flex: 1;
+            padding: 0.75rem;
             text-align: center;
-            padding: 3rem 1rem;
-            color: #999;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #9ca3af;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+            background: none;
+            border-left: none;
+            border-right: none;
+            border-top: none;
         }
 
-        .empty-state h3 {
-            font-size: 1.25rem;
-            margin: 0 0 0.5rem 0;
-            color: #666;
+        .auth-tab:hover {
+            color: #4b5563;
         }
 
-        .loading {
-            text-align: center;
-            padding: 3rem 1rem;
-            color: #999;
+        .auth-tab.active {
+            color: #7c3aed;
+            border-bottom-color: #7c3aed;
+        }
+
+        /* Forms */
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.4rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.7rem 0.9rem;
+            border: 1.5px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: white;
+            font-family: inherit;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 0.75rem;
+            background: #7c3aed;
+            color: white;
+            border: none;
+            border-radius: 8px;
             font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            margin-top: 0.5rem;
+            font-family: inherit;
+        }
+
+        .btn-submit:hover {
+            background: #6d28d9;
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .error-msg {
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 0.6rem 0.9rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .error-msg.show {
+            display: block;
+        }
+
+        @media (max-width: 480px) {
+            .auth-container {
+                padding: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar">
-        <div class="container-wide">
-            <div class="logo">
-                gather<span class="logo-dot"></span>
+    <div class="auth-container">
+        <div class="logo">
+            <h1>gather<span class="logo-dot"></span></h1>
+            <p>Create and manage in-person events</p>
+        </div>
+
+        <div class="auth-tabs">
+            <button class="auth-tab active" data-tab="login">Log in</button>
+            <button class="auth-tab" data-tab="signup">Sign up</button>
+        </div>
+
+        <div class="error-msg" id="errorMsg"></div>
+
+        <!-- Login Form -->
+        <form class="auth-form active" id="loginForm">
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-input" name="email" placeholder="you@example.com" required>
             </div>
-            <div id="nav-actions"></div>
-        </div>
-    </nav>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" class="form-input" name="password" placeholder="Your password" required>
+            </div>
+            <button type="submit" class="btn-submit">Log in</button>
+        </form>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-content">
-            <h1>Gather people.<br>In person.</h1>
-            <p>Discover and attend the best local events in your community</p>
-            <button class="btn btn-primary btn-lg">Explore Events</button>
-        </div>
-    </section>
+        <!-- Signup Form -->
+        <form class="auth-form" id="signupForm">
+            <div class="form-group">
+                <label class="form-label">Name</label>
+                <input type="text" class="form-input" name="name" placeholder="Your full name" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-input" name="email" placeholder="you@example.com" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" class="form-input" name="password" placeholder="Choose a password" minlength="6" required>
+            </div>
+            <button type="submit" class="btn-submit">Create account</button>
+        </form>
+    </div>
 
-    <!-- Events Grid -->
-    <section class="events-section">
-        <div class="events-grid" id="events-grid">
-            <div class="loading">Loading events...</div>
-        </div>
-    </section>
-
-    <script src="/js/auth.js"></script>
     <script>
-        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        // If already logged in, redirect to events browse
+        fetch('/api/me').then(r => r.json()).then(data => {
+            if (data.user) window.location.href = '/browse';
+        });
 
-        function formatDate(dateStr) {
-            const d = new Date(dateStr+'T00:00:00');
-            return {month: months[d.getMonth()], day: d.getDate()};
+        // Tab switching
+        document.querySelectorAll('.auth-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab + 'Form').classList.add('active');
+                document.getElementById('errorMsg').classList.remove('show');
+            });
+        });
+
+        function showError(msg) {
+            const el = document.getElementById('errorMsg');
+            el.textContent = msg;
+            el.classList.add('show');
         }
 
-        function formatTime(timeStr) {
-            const [h,m] = timeStr.split(':');
-            const hour=parseInt(h);
-            return `${hour%12||12}:${m} ${hour>=12?'PM':'AM'}`;
-        }
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('.btn-submit');
+            btn.disabled = true;
+            btn.textContent = 'Logging in...';
 
-        async function loadEvents() {
             try {
-                const response = await fetch('/api/events');
-                const events = await response.json();
-
-                const grid = document.getElementById('events-grid');
-                grid.innerHTML = '';
-
-                if (!events || events.length === 0) {
-                    grid.innerHTML = `
-                        <div class="empty-state" style="grid-column: 1/-1;">
-                            <h3>No events yet</h3>
-                            <p>Check back soon for exciting gatherings in your area!</p>
-                        </div>
-                    `;
+                const formData = new FormData(e.target);
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: formData.get('email'),
+                        password: formData.get('password')
+                    })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    showError(data.error || 'Login failed');
+                    btn.disabled = false;
+                    btn.textContent = 'Log in';
                     return;
                 }
-
-                events.forEach(event => {
-                    const dateObj = formatDate(event.date);
-                    const gradientStart = event.cover_gradient?.split(' to ')[0] || '#9333ea';
-                    const gradientEnd = event.cover_gradient?.split(' to ')[1] || '#ec4899';
-
-                    let statusBadge = '';
-                    if (event.status === 'draft') {
-                        statusBadge = '<span class="badge badge-draft">Draft</span>';
-                    } else if (event.status === 'cancelled') {
-                        statusBadge = '<span class="badge badge-cancelled">Cancelled</span>';
-                    }
-
-                    let ticketBadge = '';
-                    if (event.ticket_type === 'free') {
-                        ticketBadge = '<span class="ticket-badge badge-free">Free</span>';
-                    } else if (event.ticket_type === 'paid') {
-                        ticketBadge = `<span class="ticket-badge badge-paid">$${event.ticket_price || 'TBA'}</span>`;
-                    }
-
-                    const spotsRemaining = event.capacity ? `${event.capacity - (event.attendees || 0)} spots left` : 'Spots available';
-
-                    const card = document.createElement('a');
-                    card.href = `/event/${event.slug}`;
-                    card.className = 'event-card';
-                    card.innerHTML = `
-                        <div class="event-cover" style="--gradient-start: ${gradientStart}; --gradient-end: ${gradientEnd};">
-                            ${statusBadge}
-                            <div class="event-date-box">
-                                <div class="event-date-month">${dateObj.month}</div>
-                                <div class="event-date-day">${dateObj.day}</div>
-                            </div>
-                        </div>
-                        <div class="event-info">
-                            <h3 class="event-title">${event.title}</h3>
-                            <div class="event-meta">
-                                <div class="event-meta-item">
-                                    <span>📍</span>
-                                    <strong>${event.location || 'Location TBA'}</strong>
-                                </div>
-                                <div class="event-meta-item">
-                                    <span>🕒</span>
-                                    <strong>${formatTime(event.time)}</strong>
-                                </div>
-                                ${ticketBadge}
-                                <div class="event-meta-item" style="margin-top: 0.5rem; color: #999; font-size: 0.85rem;">
-                                    ${spotsRemaining}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    grid.appendChild(card);
-                });
-            } catch (error) {
-                console.error('Error loading events:', error);
-                const grid = document.getElementById('events-grid');
-                grid.innerHTML = `
-                    <div class="empty-state" style="grid-column: 1/-1;">
-                        <h3>Unable to load events</h3>
-                        <p>Please try again later.</p>
-                    </div>
-                `;
+                window.location.href = '/browse';
+            } catch (err) {
+                showError('Something went wrong. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Log in';
             }
-        }
+        });
 
-        // Initialize
-        updateNav();
-        loadEvents();
+        // Signup
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('.btn-submit');
+            btn.disabled = true;
+            btn.textContent = 'Creating account...';
 
-        // CTA Button
-        document.querySelector('.hero .btn-primary').addEventListener('click', () => {
-            document.getElementById('events-grid').scrollIntoView({ behavior: 'smooth' });
+            try {
+                const formData = new FormData(e.target);
+                const res = await fetch('/api/auth/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: formData.get('name'),
+                        email: formData.get('email'),
+                        password: formData.get('password')
+                    })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    showError(data.error || 'Signup failed');
+                    btn.disabled = false;
+                    btn.textContent = 'Create account';
+                    return;
+                }
+                window.location.href = '/browse';
+            } catch (err) {
+                showError('Something went wrong. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Create account';
+            }
         });
     </script>
 </body>

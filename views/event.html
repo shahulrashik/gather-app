@@ -4,675 +4,336 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event — Gather</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            font-family: 'Inter', sans-serif;
-        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: #fff; color: #1a1a1a; -webkit-font-smoothing: antialiased; }
 
-        .event-page {
-            min-height: 100vh;
-            background-color: #f9fafb;
-            padding: 2rem 0;
-        }
+        /* Loading */
+        .loader { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        .loader-dot { width: 8px; height: 8px; border-radius: 50%; background: #7c3aed; animation: pulse 1.2s infinite; margin: 0 4px; }
+        .loader-dot:nth-child(2) { animation-delay: 0.2s; }
+        .loader-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes pulse { 0%, 100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
 
-        .event-header {
-            width: 100%;
-            border-radius: 12px;
-            overflow: hidden;
-            margin-bottom: 2rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 200px;
-            position: relative;
-        }
+        /* Cover */
+        .cover { width: 100%; height: 340px; position: relative; overflow: hidden; }
+        .cover-bg { width: 100%; height: 100%; object-fit: cover; }
+        .cover-gradient { width: 100%; height: 100%; }
+        .cover-overlay { position: absolute; bottom: 0; left: 0; right: 0; height: 120px; background: linear-gradient(transparent, rgba(0,0,0,0.4)); }
+        .cover-nav { position: absolute; top: 0; left: 0; right: 0; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+        .cover-nav a { color: white; text-decoration: none; font-weight: 600; font-size: 1.2rem; display: flex; align-items: center; gap: 0.3rem; text-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .cover-nav .nav-dot { width: 7px; height: 7px; background: white; border-radius: 50%; }
+        .cover-nav-right { display: flex; gap: 0.5rem; }
+        .cover-nav-right a { font-size: 0.85rem; padding: 0.4rem 0.8rem; border-radius: 6px; background: rgba(255,255,255,0.2); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); font-weight: 500; }
+        .cover-nav-right a:hover { background: rgba(255,255,255,0.3); }
 
-        .event-header.with-image {
-            background-size: cover;
-            background-position: center;
-        }
+        /* Content */
+        .content { max-width: 720px; margin: 0 auto; padding: 0 1.5rem; }
+        .event-main { margin-top: -60px; position: relative; z-index: 5; }
 
-        .event-header img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        /* Date pill */
+        .date-pill { display: inline-flex; align-items: center; gap: 0.5rem; background: white; padding: 0.5rem 1rem; border-radius: 100px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); font-size: 0.85rem; font-weight: 600; color: #1a1a1a; margin-bottom: 1.25rem; }
+        .date-pill-dot { width: 6px; height: 6px; border-radius: 50%; }
 
-        .event-layout {
-            display: grid;
-            grid-template-columns: 1fr 360px;
-            gap: 2rem;
-            margin-bottom: 3rem;
-        }
+        /* Title area */
+        .event-title { font-size: 2.25rem; font-weight: 700; letter-spacing: -0.5px; line-height: 1.2; margin-bottom: 0.75rem; color: #1a1a1a; }
+        .event-host { font-size: 0.9rem; color: #6b7280; margin-bottom: 2rem; }
+        .event-host strong { color: #374151; font-weight: 600; }
 
-        .event-details-column {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
+        /* Info cards */
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; }
+        .info-card { background: #fafafa; border-radius: 12px; padding: 1.25rem; border: 1px solid #f0f0f0; transition: all 0.2s; }
+        .info-card:hover { border-color: #e5e5e5; background: #f5f5f5; }
+        .info-card-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #9ca3af; margin-bottom: 0.4rem; }
+        .info-card-value { font-size: 0.95rem; font-weight: 600; color: #1a1a1a; line-height: 1.4; }
+        .info-card-sub { font-size: 0.8rem; color: #6b7280; margin-top: 0.2rem; }
 
-        .badge {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            width: fit-content;
-            margin-bottom: 1rem;
-        }
+        /* Description */
+        .section-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #9ca3af; margin-bottom: 0.75rem; }
+        .event-description { font-size: 1rem; line-height: 1.7; color: #4b5563; margin-bottom: 2.5rem; white-space: pre-line; }
 
-        .badge.free {
-            background-color: #d1fae5;
-            color: #065f46;
-        }
+        /* RSVP card */
+        .rsvp-card { background: #fafafa; border: 1px solid #f0f0f0; border-radius: 16px; padding: 1.75rem; margin-bottom: 2.5rem; text-align: center; }
+        .rsvp-spots { font-size: 0.8rem; color: #6b7280; margin-bottom: 0.75rem; }
+        .rsvp-spots strong { color: #1a1a1a; font-size: 1.1rem; }
+        .rsvp-btn { display: block; width: 100%; padding: 0.85rem; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s; letter-spacing: -0.2px; }
+        .rsvp-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+        .rsvp-btn:active { transform: scale(0.98); }
+        .rsvp-free { color: white; }
+        .rsvp-waitlist { background: white; border: 2px solid; }
+        .rsvp-note { font-size: 0.75rem; color: #9ca3af; margin-top: 0.75rem; }
 
-        .badge.paid {
-            background-color: #fef3c7;
-            color: #92400e;
-        }
+        /* Owner actions */
+        .owner-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
+        .owner-btn { flex: 1; padding: 0.6rem; border-radius: 8px; text-align: center; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.15s; }
+        .owner-btn-edit { background: #f3f4f6; color: #374151; }
+        .owner-btn-edit:hover { background: #e5e7eb; }
+        .owner-btn-dash { background: #ede9fe; color: #7c3aed; }
+        .owner-btn-dash:hover { background: #ddd6fe; }
+        .owner-btn-checkin { background: #1a1a1a; color: white; }
+        .owner-btn-checkin:hover { background: #333; }
 
-        h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin: 0 0 1rem 0;
-            color: #111827;
-            line-height: 1.2;
-        }
+        /* Status banners */
+        .status-banner { padding: 1rem; border-radius: 10px; text-align: center; font-weight: 600; font-size: 0.9rem; margin-bottom: 1rem; }
+        .status-cancelled { background: #fef2f2; color: #dc2626; }
+        .status-draft { background: #eff6ff; color: #2563eb; }
 
-        .event-description {
-            font-size: 1.0625rem;
-            color: #4b5563;
-            line-height: 1.6;
-            margin-bottom: 2rem;
-        }
+        /* Map */
+        .map-section { margin-bottom: 2.5rem; }
+        .map-container { border-radius: 12px; overflow: hidden; height: 280px; border: 1px solid #f0f0f0; }
+        .map-container iframe { width: 100%; height: 100%; border: none; }
 
-        .event-details {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
+        /* Calendar */
+        .calendar-section { margin-bottom: 3rem; }
+        .calendar-btns { display: flex; gap: 0.75rem; }
+        .cal-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.7rem; border-radius: 10px; background: #fafafa; border: 1px solid #f0f0f0; color: #374151; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; }
+        .cal-btn:hover { background: #f0f0f0; border-color: #e5e5e5; }
+        .cal-btn svg { width: 16px; height: 16px; }
 
-        .event-detail-item {
-            display: flex;
-            gap: 1rem;
-            align-items: flex-start;
-        }
+        /* Share */
+        .share-section { margin-bottom: 4rem; }
+        .share-btn { padding: 0.6rem 1.2rem; border-radius: 8px; background: #fafafa; border: 1px solid #f0f0f0; color: #374151; font-size: 0.85rem; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+        .share-btn:hover { background: #f0f0f0; }
+        .share-copied { color: #059669; font-weight: 600; }
 
-        .event-detail-icon {
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #667eea;
-            flex-shrink: 0;
-            margin-top: 0.25rem;
-        }
+        /* Divider */
+        .divider { height: 1px; background: #f0f0f0; margin: 2rem 0; }
 
-        .event-detail-icon svg {
-            width: 100%;
-            height: 100%;
-        }
+        /* Not found */
+        .not-found { text-align: center; padding: 6rem 2rem; }
+        .not-found h2 { font-size: 1.5rem; color: #374151; margin-bottom: 0.5rem; }
+        .not-found p { color: #9ca3af; }
 
-        .event-detail-text {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-
-        .event-detail-text .label {
-            font-size: 0.875rem;
-            color: #9ca3af;
-            font-weight: 500;
-        }
-
-        .event-detail-text .value {
-            font-size: 1rem;
-            color: #1f2937;
-            font-weight: 500;
-        }
-
-        .event-map {
-            border-radius: 12px;
-            overflow: hidden;
-            height: 400px;
-            margin-top: 1rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .event-map iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        .calendar-buttons {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-
-        .calendar-buttons a {
-            flex: 1;
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
-            border: 1px solid #e5e7eb;
-            background-color: white;
-            color: #4b5563;
-            text-decoration: none;
-            font-size: 0.875rem;
-            font-weight: 600;
-            text-align: center;
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-
-        .calendar-buttons a:hover {
-            background-color: #f3f4f6;
-            border-color: #d1d5db;
-        }
-
-        /* Sidebar */
-        .event-sidebar {
-            position: sticky;
-            top: 2rem;
-            height: fit-content;
-        }
-
-        .event-register-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .register-header {
-            margin-bottom: 1.5rem;
-        }
-
-        .spots-remaining {
-            font-size: 0.875rem;
-            color: #9ca3af;
-            margin-bottom: 0.5rem;
-        }
-
-        .spots-count {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #111827;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            border: none;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            text-align: center;
-            transition: all 0.2s ease;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .btn-primary {
-            background-color: #667eea;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: #5568d3;
-        }
-
-        .btn-lg {
-            padding: 1rem 1.5rem;
-            font-size: 1.0625rem;
-        }
-
-        .btn-full {
-            width: 100%;
-            display: block;
-        }
-
-        .btn-outline {
-            background-color: white;
-            color: #667eea;
-            border: 2px solid #667eea;
-        }
-
-        .btn-outline:hover {
-            background-color: #f0f4ff;
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 400px;
-        }
-
-        .spinner {
-            border: 4px solid #e5e7eb;
-            border-top-color: #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .empty-state {
-            padding: 3rem 2rem;
-            text-align: center;
-            color: #9ca3af;
-        }
-
-        .empty-state h2 {
-            color: #6b7280;
-            margin-bottom: 0.5rem;
-        }
-
-        .event-cancelled {
-            background-color: #fee2e2;
-            color: #991b1b;
-            padding: 1rem;
-            border-radius: 8px;
-            text-align: center;
-            font-weight: 600;
-        }
-
-        .event-coming-soon {
-            background-color: #dbeafe;
-            color: #0c2d6b;
-            padding: 1rem;
-            border-radius: 8px;
-            text-align: center;
-            font-weight: 600;
-        }
-
-        .event-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            margin-top: 1rem;
-        }
-
-        .event-actions a {
-            display: block;
-            padding: 0.75rem;
-            border-radius: 8px;
-            text-align: center;
-            text-decoration: none;
-            font-size: 0.875rem;
-            font-weight: 600;
-            background-color: #f3f4f6;
-            color: #374151;
-            transition: all 0.2s ease;
-        }
-
-        .event-actions a:hover {
-            background-color: #e5e7eb;
-        }
-
-        .container-wide {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1.5rem;
-        }
-
-        /* Navbar */
-        nav {
-            background-color: white;
-            padding: 1rem 0;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
-        }
-
-        nav .container-wide {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .nav-logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #667eea;
-            text-decoration: none;
-        }
-
-        #nav-actions {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        @media (max-width: 768px) {
-            .event-layout {
-                grid-template-columns: 1fr;
-            }
-
-            .event-sidebar {
-                position: static;
-            }
-
-            h1 {
-                font-size: 1.875rem;
-            }
-
-            .calendar-buttons {
-                flex-direction: column;
-            }
+        /* Responsive */
+        @media (max-width: 640px) {
+            .cover { height: 240px; }
+            .cover-nav { padding: 0.75rem 1rem; }
+            .event-title { font-size: 1.75rem; }
+            .info-grid { grid-template-columns: 1fr; }
+            .calendar-btns { flex-direction: column; }
+            .owner-actions { flex-direction: column; }
+            .content { padding: 0 1rem; }
         }
     </style>
 </head>
 <body>
-    <nav>
-        <div class="container-wide">
-            <a href="/" class="nav-logo">Gather</a>
-            <div id="nav-actions"></div>
-        </div>
-    </nav>
-
-    <div class="event-page">
-        <div class="container-wide">
-            <div id="event-content" class="loading">
-                <div class="spinner"></div>
-            </div>
+    <div id="app">
+        <div class="loader">
+            <div class="loader-dot"></div>
+            <div class="loader-dot"></div>
+            <div class="loader-dot"></div>
         </div>
     </div>
 
-    <template id="event-template">
-        <div class="event-layout">
-            <!-- Left Column -->
-            <div class="event-details-column">
-                <!-- Cover -->
-                <div class="event-header" id="event-cover"></div>
-
-                <!-- Badge -->
-                <div id="event-badge-container"></div>
-
-                <!-- Title -->
-                <h1 id="event-title"></h1>
-
-                <!-- Description -->
-                <p class="event-description" id="event-description"></p>
-
-                <!-- Details -->
-                <div class="event-details" id="event-details"></div>
-
-                <!-- Map -->
-                <div class="event-map" id="event-map-container"></div>
-
-                <!-- Calendar Buttons -->
-                <div class="calendar-buttons" id="calendar-buttons"></div>
-            </div>
-
-            <!-- Right Column (Sidebar) -->
-            <div class="event-sidebar">
-                <div class="event-register-card" id="register-card"></div>
-            </div>
-        </div>
-    </template>
-
-    <script src="/js/auth.js"></script>
     <script>
-        // SVG Icons
-        const icons = {
-            calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v6M15 3v6"/></svg>',
-            mapPin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C7.58 2 4 5.58 4 10c0 5.25 8 13 8 13s8-7.75 8-13c0-4.42-3.58-8-8-8zm0 11a3 3 0 110-6 3 3 0 010 6z"/></svg>',
-            people: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M21 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75M9 11a4 4 0 100-8 4 4 0 000 8z"/></svg>',
-            person: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M12 14c-4 0-6 2-6 4v2h12v-2c0-2-2-4-6-4z"/></svg>'
-        };
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const shortMonths = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
-        // Format date for .ics (YYYYMMDDTHHMMSS)
-        function formatDateForICS(date) {
-            const pad = (n) => String(n).padStart(2, '0');
-            return `${date.getUTCFullYear()}${pad(date.getUTCMonth() + 1)}${pad(date.getUTCDate())}T${pad(date.getUTCHours())}${pad(date.getUTCMinutes())}${pad(date.getUTCSeconds())}Z`;
-        }
+    function formatTime(t) {
+        if (!t) return '';
+        const [h,m] = t.split(':');
+        const hr = parseInt(h);
+        return `${hr%12||12}:${m} ${hr>=12?'PM':'AM'}`;
+    }
 
-        // Generate Apple Calendar .ics file
-        function generateICS(event) {
-            const start = new Date(event.datetime_start);
-            const end = new Date(event.datetime_end);
-            
-            const icsContent = `BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//Gather//Event Calendar//EN
-BEGIN:VEVENT
-DTSTART:${formatDateForICS(start)}
-DTEND:${formatDateForICS(end)}
-SUMMARY:${escapeICSText(event.title)}
-LOCATION:${escapeICSText(event.location)}
-DESCRIPTION:${escapeICSText(event.description)}
-UID:${event.id}@gather.app
-DTSTAMP:${formatDateForICS(new Date())}
-END:VEVENT
-END:VCALENDAR`;
+    function getSlug() {
+        return window.location.pathname.split('/')[2];
+    }
 
-            return 'data:text/calendar;base64,' + btoa(icsContent);
-        }
+    function escapeICS(text) {
+        if (!text) return '';
+        return text.replace(/[\\,;]/g, '\\$&').replace(/\n/g, '\\n');
+    }
 
-        // Escape special characters for .ics format
-        function escapeICSText(text) {
-            if (!text) return '';
-            return text.replace(/[\\,;]/g, '\\$&').replace(/\n/g, '\\n');
-        }
+    async function init() {
+        const slug = getSlug();
+        const app = document.getElementById('app');
 
-        // Format date for display
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit',
-                meridiem: 'short'
-            });
-        }
+        try {
+            // Fetch event + auth in parallel
+            const [eventRes, meRes] = await Promise.all([
+                fetch(`/api/events/${slug}`),
+                fetch('/api/me')
+            ]);
 
-        // Format ISO date for Google Calendar
-        function formatISO(dateString) {
-            const date = new Date(dateString);
-            const pad = (n) => String(n).padStart(2, '0');
-            return `${date.getUTCFullYear()}${pad(date.getUTCMonth() + 1)}${pad(date.getUTCDate())}T${pad(date.getUTCHours())}${pad(date.getUTCMinutes())}${pad(date.getUTCSeconds())}Z`;
-        }
+            if (!eventRes.ok) throw new Error('Not found');
 
-        // Get slug from URL
-        function getEventSlug() {
-            const pathParts = window.location.pathname.split('/');
-            return pathParts[2];
-        }
+            const event = await eventRes.json();
+            const { user } = await meRes.json();
 
-        // Create event badge
-        function createBadge(eventType) {
-            const badgeEl = document.createElement('div');
-            badgeEl.className = `badge ${eventType}`;
-            badgeEl.textContent = eventType === 'free' ? 'Free Event' : 'Paid Event';
-            return badgeEl;
-        }
+            const d = new Date(event.date + 'T00:00:00');
+            const dayName = days[d.getDay()];
+            const monthName = months[d.getMonth()];
+            const dayNum = d.getDate();
+            const year = d.getFullYear();
+            const spotsLeft = event.capacity - (event.rsvp_count || 0);
+            const accentColor = event.accent_color || '#7c3aed';
+            const isOwner = event.is_owner;
 
-        // Create detail item
-        function createDetailItem(label, value, iconType) {
-            const item = document.createElement('div');
-            item.className = 'event-detail-item';
-            item.innerHTML = `
-                <div class="event-detail-icon">${icons[iconType]}</div>
-                <div class="event-detail-text">
-                    <div class="label">${label}</div>
-                    <div class="value">${value}</div>
+            // Build cover
+            let coverHTML = '';
+            if (event.cover_image) {
+                coverHTML = `<img class="cover-bg" src="${event.cover_image}" alt="${event.title}">`;
+            } else {
+                coverHTML = `<div class="cover-gradient" style="background: ${event.cover_gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'};"></div>`;
+            }
+
+            // Build RSVP section
+            let rsvpHTML = '';
+            if (event.status === 'cancelled') {
+                rsvpHTML = `<div class="status-banner status-cancelled">This event has been cancelled</div>`;
+            } else if (event.status === 'draft') {
+                rsvpHTML = `<div class="status-banner status-draft">This event is not yet published</div>`;
+            } else {
+                rsvpHTML = `
+                    <div class="rsvp-card">
+                        <div class="rsvp-spots"><strong>${spotsLeft}</strong> spots left</div>
+                        ${spotsLeft > 0
+                            ? `<a href="/event/${event.slug}/register" class="rsvp-btn rsvp-free" style="background: ${accentColor};">RSVP</a>`
+                            : `<a href="/event/${event.slug}/register" class="rsvp-btn rsvp-waitlist" style="border-color: ${accentColor}; color: ${accentColor};">Join Waitlist</a>`
+                        }
+                        <div class="rsvp-note">Free · No payment required</div>
+                    </div>
+                `;
+            }
+
+            // Owner actions
+            let ownerHTML = '';
+            if (isOwner) {
+                ownerHTML = `
+                    <div class="owner-actions">
+                        <a href="/event/${event.slug}/edit" class="owner-btn owner-btn-edit">Edit</a>
+                        <a href="/event/${event.slug}/dashboard" class="owner-btn owner-btn-dash">Dashboard</a>
+                        <a href="/event/${event.slug}/checkin" class="owner-btn owner-btn-checkin">Check-in</a>
+                    </div>
+                `;
+            }
+
+            // Calendar URLs
+            const startISO = `${event.date.replace(/-/g, '')}T${(event.start_time||'00:00').replace(':','')}00`;
+            const endISO = `${event.date.replace(/-/g, '')}T${(event.end_time||'23:59').replace(':','')}00`;
+            const gcalUrl = `https://calendar.google.com/calendar/event?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${startISO}/${endISO}&location=${encodeURIComponent(event.location)}&details=${encodeURIComponent(event.description || '')}`;
+
+            const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nDTSTART:${startISO}\nDTEND:${endISO}\nSUMMARY:${escapeICS(event.title)}\nLOCATION:${escapeICS(event.location)}\nDESCRIPTION:${escapeICS(event.description)}\nEND:VEVENT\nEND:VCALENDAR`;
+            const icsUrl = 'data:text/calendar;base64,' + btoa(icsContent);
+
+            app.innerHTML = `
+                <!-- Cover -->
+                <div class="cover">
+                    ${coverHTML}
+                    <div class="cover-overlay"></div>
+                    <div class="cover-nav">
+                        <a href="/browse">gather<span class="nav-dot"></span></a>
+                        <div class="cover-nav-right">
+                            ${user ? `<a href="/my-events">My Events</a>` : `<a href="/">Log in</a>`}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="content">
+                    <div class="event-main">
+                        <!-- Date pill -->
+                        <div class="date-pill">
+                            <span class="date-pill-dot" style="background: ${accentColor};"></span>
+                            ${dayName}, ${monthName} ${dayNum}, ${year}
+                        </div>
+
+                        <!-- Title -->
+                        <h1 class="event-title">${event.title}</h1>
+                        <div class="event-host">Hosted by <strong>${event.host_name || 'Anonymous'}</strong></div>
+
+                        <!-- RSVP -->
+                        ${rsvpHTML}
+                        ${ownerHTML}
+
+                        <!-- Info grid -->
+                        <div class="info-grid">
+                            <div class="info-card">
+                                <div class="info-card-label">Date & Time</div>
+                                <div class="info-card-value">${shortMonths[d.getMonth()]} ${dayNum}, ${year}</div>
+                                <div class="info-card-sub">${formatTime(event.start_time)} – ${formatTime(event.end_time)}</div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-card-label">Location</div>
+                                <div class="info-card-value">${event.location}</div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-card-label">Capacity</div>
+                                <div class="info-card-value">${event.rsvp_count || 0} / ${event.capacity} registered</div>
+                                <div class="info-card-sub">${spotsLeft} spots remaining</div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-card-label">Ticket</div>
+                                <div class="info-card-value">Free</div>
+                                <div class="info-card-sub">No payment required</div>
+                            </div>
+                        </div>
+
+                        ${event.description ? `
+                            <div class="section-label">About</div>
+                            <div class="event-description">${event.description}</div>
+                        ` : ''}
+
+                        <!-- Map -->
+                        <div class="map-section">
+                            <div class="section-label">Location</div>
+                            <div class="map-container">
+                                <iframe src="https://maps.google.com/maps?q=${encodeURIComponent(event.location)}&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                            </div>
+                        </div>
+
+                        <!-- Calendar -->
+                        <div class="calendar-section">
+                            <div class="section-label">Add to calendar</div>
+                            <div class="calendar-btns">
+                                <a href="${gcalUrl}" target="_blank" class="cal-btn">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>
+                                    Google Calendar
+                                </a>
+                                <a href="${icsUrl}" download="${event.title}.ics" class="cal-btn">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>
+                                    Apple Calendar
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Share -->
+                        <div class="share-section">
+                            <div class="section-label">Share</div>
+                            <button class="share-btn" id="shareBtn">Copy link</button>
+                        </div>
+                    </div>
                 </div>
             `;
-            return item;
+
+            // Share button
+            document.getElementById('shareBtn').addEventListener('click', function() {
+                navigator.clipboard.writeText(window.location.href);
+                this.textContent = 'Copied!';
+                this.classList.add('share-copied');
+                setTimeout(() => {
+                    this.textContent = 'Copy link';
+                    this.classList.remove('share-copied');
+                }, 2000);
+            });
+
+        } catch (err) {
+            console.error(err);
+            app.innerHTML = `
+                <div class="not-found">
+                    <h2>Event not found</h2>
+                    <p>This event doesn't exist or has been removed.</p>
+                </div>
+            `;
         }
+    }
 
-        // Render event
-        function renderEvent(event) {
-            const template = document.getElementById('event-template');
-            const clone = template.content.cloneNode(true);
-
-            // Cover
-            const coverEl = clone.getElementById('event-cover');
-            if (event.cover_gradient) {
-                coverEl.style.background = event.cover_gradient;
-            }
-            if (event.cover_image) {
-                coverEl.classList.add('with-image');
-                const img = document.createElement('img');
-                img.src = event.cover_image;
-                img.alt = event.title;
-                coverEl.appendChild(img);
-            }
-
-            // Badge
-            const badgeContainer = clone.getElementById('event-badge-container');
-            badgeContainer.appendChild(createBadge(event.is_paid ? 'paid' : 'free'));
-
-            // Title
-            clone.getElementById('event-title').textContent = event.title;
-
-            // Description
-            clone.getElementById('event-description').textContent = event.description;
-
-            // Details
-            const detailsContainer = clone.getElementById('event-details');
-            detailsContainer.appendChild(createDetailItem(
-                'Date & Time',
-                formatDate(event.datetime_start),
-                'calendar'
-            ));
-            detailsContainer.appendChild(createDetailItem(
-                'Location',
-                event.location,
-                'mapPin'
-            ));
-            detailsContainer.appendChild(createDetailItem(
-                'Spots Remaining',
-                `${event.spots_remaining} of ${event.max_attendees}`,
-                'people'
-            ));
-            if (event.host_name) {
-                detailsContainer.appendChild(createDetailItem(
-                    'Hosted by',
-                    event.host_name,
-                    'person'
-                ));
-            }
-
-            // Map
-            const mapContainer = clone.getElementById('event-map-container');
-            const mapIframe = document.createElement('iframe');
-            mapIframe.src = `https://maps.google.com/maps?q=${encodeURIComponent(event.location)}&output=embed`;
-            mapIframe.loading = 'lazy';
-            mapContainer.appendChild(mapIframe);
-
-            // Calendar buttons
-            const calendarButtons = clone.getElementById('calendar-buttons');
-            
-            const googleCalendarUrl = `https://calendar.google.com/calendar/event?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${formatISO(event.datetime_start)}/${formatISO(event.datetime_end)}&location=${encodeURIComponent(event.location)}&details=${encodeURIComponent(event.description)}`;
-            const googleBtn = document.createElement('a');
-            googleBtn.href = googleCalendarUrl;
-            googleBtn.target = '_blank';
-            googleBtn.textContent = 'Add to Google Calendar';
-            calendarButtons.appendChild(googleBtn);
-
-            const appleCalendarUrl = generateICS(event);
-            const appleBtn = document.createElement('a');
-            appleBtn.href = appleCalendarUrl;
-            appleBtn.download = `${event.title}.ics`;
-            appleBtn.textContent = 'Add to Apple Calendar';
-            calendarButtons.appendChild(appleBtn);
-
-            // Register card
-            const registerCard = clone.getElementById('register-card');
-            registerCard.innerHTML = '';
-
-            if (event.status === 'cancelled') {
-                registerCard.innerHTML = '<div class="event-cancelled">Event Cancelled</div>';
-            } else if (event.status === 'draft') {
-                registerCard.innerHTML = '<div class="event-coming-soon">Coming Soon</div>';
-            } else {
-                const spotDiv = document.createElement('div');
-                spotDiv.className = 'register-header';
-                spotDiv.innerHTML = `
-                    <div class="spots-remaining">Spots Available</div>
-                    <div class="spots-count">${event.spots_remaining}</div>
-                `;
-                registerCard.appendChild(spotDiv);
-
-                if (event.is_owner) {
-                    const actionsDiv = document.createElement('div');
-                    actionsDiv.className = 'event-actions';
-                    
-                    const editLink = document.createElement('a');
-                    editLink.href = `/edit/${event.slug}`;
-                    editLink.textContent = 'Edit Event';
-                    
-                    const dashboardLink = document.createElement('a');
-                    dashboardLink.href = `/dashboard/${event.slug}`;
-                    dashboardLink.textContent = 'Dashboard';
-                    
-                    actionsDiv.appendChild(editLink);
-                    actionsDiv.appendChild(dashboardLink);
-                    registerCard.appendChild(actionsDiv);
-                } else {
-                    const btn = document.createElement('button');
-                    btn.className = 'btn btn-primary btn-lg btn-full';
-                    
-                    if (event.spots_remaining > 0) {
-                        btn.textContent = event.is_paid ? 'Get Ticket' : 'RSVP';
-                        btn.style.backgroundColor = event.accent_color || '#667eea';
-                    } else {
-                        btn.textContent = 'Join Waitlist';
-                        btn.classList.add('btn-outline');
-                        btn.style.borderColor = event.accent_color || '#667eea';
-                        btn.style.color = event.accent_color || '#667eea';
-                    }
-                    
-                    registerCard.appendChild(btn);
-                }
-            }
-
-            return clone;
-        }
-
-        // Load and render event
-        async function loadEvent() {
-            const slug = getEventSlug();
-            const contentDiv = document.getElementById('event-content');
-
-            try {
-                const response = await fetch(`/api/events/${slug}`);
-                if (!response.ok) {
-                    throw new Error('Event not found');
-                }
-
-                const event = await response.json();
-                const renderedEvent = renderEvent(event);
-                contentDiv.innerHTML = '';
-                contentDiv.appendChild(renderedEvent);
-            } catch (error) {
-                contentDiv.innerHTML = '<div class="empty-state"><h2>Event Not Found</h2><p>The event you\'re looking for doesn\'t exist or has been removed.</p></div>';
-                console.error('Error loading event:', error);
-            }
-        }
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            loadEvent();
-            updateNav();
-        });
+    init();
     </script>
 </body>
 </html>

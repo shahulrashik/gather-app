@@ -4,67 +4,137 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Event - Gather</title>
-    <link rel="stylesheet" href="/css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
-            font-family: 'Inter', sans-serif;
-        }
-
-        .create-page {
-            min-height: 100vh;
-            background: #f9fafb;
-            padding: 2rem 0;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 0 1.5rem;
-        }
-
-        .page-header {
-            margin-bottom: 3rem;
-        }
-
-        .page-header h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #1f2937;
-            margin: 0 0 0.5rem 0;
-        }
-
-        .page-header p {
-            color: #6b7280;
-            font-size: 1.1rem;
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: #fafafa;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: white;
+            border-bottom: 1px solid #e5e5e5;
+            padding: 0.75rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .logo-dot {
+            width: 8px;
+            height: 8px;
+            background: #7c3aed;
+            border-radius: 50%;
+        }
+
+        .nav-back {
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .nav-back:hover {
+            color: #1a1a1a;
+            background: #f3f4f6;
+        }
+
+        .page-content {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 0.25rem;
+        }
+
+        .page-subtitle {
+            color: #6b7280;
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e5e5e5;
+            padding: 2rem;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .form-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 1.25rem;
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
-            display: flex;
-            flex-direction: column;
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
         }
 
         .form-label {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #1f2937;
-            margin-bottom: 0.5rem;
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.4rem;
         }
 
         .form-input,
         .form-textarea,
         .form-select {
-            padding: 0.75rem 1rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.5rem;
-            font-size: 1rem;
+            width: 100%;
+            padding: 0.65rem 0.85rem;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.95rem;
             transition: border-color 0.2s, box-shadow 0.2s;
             background: white;
-            font-family: 'Inter', sans-serif;
+            font-family: inherit;
+            color: #1a1a1a;
         }
 
         .form-input:focus,
@@ -72,93 +142,99 @@
         .form-select:focus {
             outline: none;
             border-color: #7c3aed;
-            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.08);
         }
 
         .form-textarea {
             resize: vertical;
-            min-height: 120px;
+            min-height: 100px;
+        }
+
+        .form-hint {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            margin-top: 0.35rem;
+        }
+
+        /* Date/Time grid */
+        .datetime-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        @media (max-width: 560px) {
+            .datetime-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Custom date input styling */
+        input[type="date"],
+        input[type="time"] {
+            -webkit-appearance: none;
+            appearance: none;
+            padding: 0.65rem 0.85rem;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            color: #1a1a1a;
+            background: white;
+            width: 100%;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input[type="date"]:focus,
+        input[type="time"]:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.08);
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            opacity: 0.5;
+            cursor: pointer;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator:hover,
+        input[type="time"]::-webkit-calendar-picker-indicator:hover {
+            opacity: 1;
         }
 
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            gap: 0.75rem;
         }
 
-        .form-row .form-group {
-            margin-bottom: 0;
+        @media (max-width: 560px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
         }
 
-        .form-hint {
-            font-size: 0.875rem;
-            color: #6b7280;
-            margin-top: 0.5rem;
-        }
-
-        .section-divider {
+        /* Divider */
+        .divider {
             height: 1px;
-            background: #e5e7eb;
+            background: #f3f4f6;
             margin: 2rem 0;
         }
 
-        .section-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #1f2937;
-            margin: 2rem 0 1.5rem 0;
-        }
-
-        /* Ticket Toggle */
-        .ticket-toggle {
-            display: flex;
-            gap: 0.5rem;
-            margin: 1rem 0;
-        }
-
-        .toggle-btn {
-            flex: 1;
-            padding: 0.75rem 1rem;
-            border: 2px solid #d1d5db;
-            background: white;
-            color: #6b7280;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .toggle-btn.active {
-            border-color: #7c3aed;
-            background: #7c3aed;
-            color: white;
-        }
-
-        .price-field {
-            display: none;
-        }
-
-        .price-field.show {
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Color & Gradient Swatches */
+        /* Gradient & Color swatches */
         .swatches-row {
             display: flex;
-            gap: 1rem;
+            gap: 0.75rem;
             flex-wrap: wrap;
-            margin: 1rem 0;
         }
 
         .swatch {
             cursor: pointer;
             border-radius: 50%;
-            width: 48px;
-            height: 48px;
-            display: inline-block;
-            border: 2px solid transparent;
+            width: 44px;
+            height: 44px;
+            border: 3px solid transparent;
             transition: all 0.2s;
         }
 
@@ -167,208 +243,226 @@
         }
 
         .swatch.selected {
-            box-shadow: 0 0 0 3px #7c3aed;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 2px white, 0 0 0 4px #7c3aed;
         }
 
-        /* Buttons */
-        .btn {
-            padding: 0.75rem 1.5rem;
+        .swatch-img {
+            cursor: pointer;
+            border-radius: 8px;
+            width: 64px;
+            height: 44px;
+            border: 3px solid transparent;
+            transition: all 0.2s;
+            background-size: cover;
+            background-position: center;
+            flex-shrink: 0;
+        }
+
+        .swatch-img:hover {
+            transform: scale(1.05);
+        }
+
+        .swatch-img.selected {
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 2px white, 0 0 0 4px #7c3aed;
+        }
+
+        /* Custom URL */
+        .url-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .url-input-wrapper:focus-within {
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.08);
+        }
+
+        .url-prefix {
+            padding: 0.65rem 0.75rem;
+            background: #f9fafb;
+            color: #9ca3af;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            border-right: 1px solid #e5e7eb;
+        }
+
+        .url-input-wrapper input {
+            flex: 1;
             border: none;
-            border-radius: 0.5rem;
+            padding: 0.65rem 0.75rem;
+            font-size: 0.95rem;
+            font-family: inherit;
+            outline: none;
+            color: #1a1a1a;
+        }
+
+        /* Status select */
+        .form-select {
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1rem;
+            padding-right: 2.5rem;
+        }
+
+        /* Submit */
+        .btn-submit {
+            width: 100%;
+            padding: 0.8rem;
+            background: #7c3aed;
+            color: white;
+            border: none;
+            border-radius: 8px;
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-block;
+            transition: background 0.2s, transform 0.1s;
+            font-family: inherit;
+            margin-top: 1.5rem;
         }
 
-        .btn-primary {
-            background: #7c3aed;
-            color: white;
-        }
-
-        .btn-primary:hover {
+        .btn-submit:hover {
             background: #6d28d9;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
         }
 
-        .btn-lg {
-            padding: 1rem 2rem;
-            font-size: 1.1rem;
+        .btn-submit:active {
+            transform: scale(0.98);
         }
 
-        .btn-full {
-            width: 100%;
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
-        /* Form Container */
-        .form-container {
-            background: white;
-            padding: 2rem;
-            border-radius: 1rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Navbar */
-        nav {
-            background: white;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 1rem 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        nav .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #7c3aed;
-        }
-
-        #nav-actions {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        @media (max-width: 768px) {
-            .form-row {
-                grid-template-columns: 1fr;
+        @media (max-width: 640px) {
+            .navbar {
+                padding: 0.75rem 1rem;
             }
-
-            .page-header h1 {
-                font-size: 2rem;
+            .page-content {
+                padding: 1.5rem 1rem 3rem;
             }
-
-            .container {
-                padding: 0 1rem;
-            }
-
-            .form-container {
+            .form-card {
                 padding: 1.5rem;
             }
         }
     </style>
 </head>
 <body>
-    <nav>
-        <div class="logo">Gather</div>
-        <div id="nav-actions"></div>
+    <nav class="navbar">
+        <a href="/browse" class="logo">gather<span class="logo-dot"></span></a>
+        <a href="/browse" class="nav-back">← Back</a>
     </nav>
 
-    <div class="create-page">
-        <div class="container">
-            <div class="page-header">
-                <h1>Create New Event</h1>
-                <p>Fill in the details below to create your event</p>
-            </div>
+    <div class="page-content">
+        <h1 class="page-title">Create Event</h1>
+        <p class="page-subtitle">Fill in the details for your event</p>
 
-            <div class="form-container">
-                <form id="createEventForm">
-                    <!-- Basic Information Section -->
-                    <div class="form-group">
-                        <label class="form-label">Event Title *</label>
-                        <input type="text" class="form-input" name="title" placeholder="Give your event a title" required>
-                    </div>
+        <div class="form-card">
+            <form id="createForm">
+                <!-- Details -->
+                <div class="form-section">
+                    <div class="section-label">Event Details</div>
 
                     <div class="form-group">
-                        <label class="form-label">Description *</label>
-                        <textarea class="form-textarea" name="description" placeholder="Describe your event in detail..." required></textarea>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Date *</label>
-                            <input type="date" class="form-input" name="event_date" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Start Time *</label>
-                            <input type="time" class="form-input" name="start_time" required>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">End Time *</label>
-                            <input type="time" class="form-input" name="end_time" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Location *</label>
-                            <input type="text" class="form-input" name="location" placeholder="Where is your event?" required>
-                            <p class="form-hint">Tip: Use Google Maps to get the exact address</p>
-                        </div>
+                        <label class="form-label">Title</label>
+                        <input type="text" class="form-input" name="title" placeholder="What's your event called?" required>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Capacity *</label>
-                        <input type="number" class="form-input" name="capacity" placeholder="How many attendees?" min="1" required>
+                        <label class="form-label">Description</label>
+                        <textarea class="form-textarea" name="description" placeholder="Tell people what your event is about..."></textarea>
                     </div>
 
-                    <div class="section-divider"></div>
-
-                    <!-- Ticketing Section -->
-                    <div class="section-title">Ticketing</div>
-
                     <div class="form-group">
-                        <label class="form-label">Ticket Type *</label>
-                        <div class="ticket-toggle">
-                            <button type="button" class="toggle-btn active" data-type="free">Free</button>
-                            <button type="button" class="toggle-btn" data-type="paid">Paid</button>
+                        <label class="form-label">Date & Time</label>
+                        <div class="datetime-grid">
+                            <div>
+                                <input type="date" name="event_date" required>
+                            </div>
+                            <div>
+                                <input type="time" name="start_time" required>
+                            </div>
+                            <div>
+                                <input type="time" name="end_time" required>
+                            </div>
                         </div>
+                        <p class="form-hint">Date, start time, and end time</p>
                     </div>
-
-                    <div class="form-group price-field" id="priceField">
-                        <label class="form-label">Ticket Price *</label>
-                        <input type="number" class="form-input" name="ticket_price" placeholder="0.00" step="0.01" min="0">
-                    </div>
-
-                    <input type="hidden" name="is_paid" value="false">
-
-                    <div class="section-divider"></div>
-
-                    <!-- Event URL & Customization Section -->
-                    <div class="section-title">Customization</div>
 
                     <div class="form-group">
-                        <label class="form-label">Custom Event URL</label>
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <span style="color: #6b7280;">gather.app/event/</span>
-                            <input type="text" class="form-input" name="custom_slug" placeholder="your-custom-url" style="flex: 1;">
+                        <label class="form-label">Location</label>
+                        <input type="text" class="form-input" name="location" placeholder="Where is your event?" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Capacity</label>
+                        <input type="number" class="form-input" name="capacity" placeholder="Max number of attendees" min="1" value="50" required>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- Customization -->
+                <div class="form-section">
+                    <div class="section-label">Customization</div>
+
+                    <div class="form-group">
+                        <label class="form-label">Custom URL</label>
+                        <div class="url-input-wrapper">
+                            <span class="url-prefix">gather.app/event/</span>
+                            <input type="text" name="custom_slug" placeholder="your-event-url">
                         </div>
-                        <p class="form-hint">Leave empty for an auto-generated URL. Use lowercase letters, numbers, and hyphens only.</p>
+                        <p class="form-hint">Leave empty to auto-generate. Letters, numbers, and hyphens only.</p>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Cover Gradient</label>
+                        <label class="form-label">Event Cover</label>
+                        <div class="cover-preview" id="coverPreview" style="height: 120px; border-radius: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-bottom: 0.75rem; background-size: cover; background-position: center; transition: all 0.3s;"></div>
+
+                        <p class="form-hint" style="margin-bottom: 0.75rem;">Choose a photo or gradient</p>
+
+                        <!-- Photo covers -->
+                        <div class="swatches-row" id="imageSwatches" style="margin-bottom: 0.75rem;">
+                            <div class="swatch-img" data-image="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80" style="background-image: url('https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80');"></div>
+                            <div class="swatch-img" data-image="https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800&q=80" style="background-image: url('https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800&q=80');"></div>
+                            <div class="swatch-img" data-image="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&q=80" style="background-image: url('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&q=80');"></div>
+                            <div class="swatch-img" data-image="https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=800&q=80" style="background-image: url('https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=800&q=80');"></div>
+                            <div class="swatch-img" data-image="https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=800&q=80" style="background-image: url('https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=800&q=80');"></div>
+                            <div class="swatch-img" data-image="https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=800&q=80" style="background-image: url('https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=800&q=80');"></div>
+                        </div>
+
+                        <!-- Gradient covers -->
                         <div class="swatches-row" id="gradientSwatches">
-                            <div class="swatch" 
-                                 data-gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)" 
-                                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
-                            <div class="swatch" 
-                                 data-gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" 
-                                 style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>
-                            <div class="swatch" 
-                                 data-gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" 
-                                 style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"></div>
-                            <div class="swatch" 
-                                 data-gradient="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)" 
-                                 style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);"></div>
-                            <div class="swatch" 
-                                 data-gradient="linear-gradient(135deg, #fa709a 0%, #fee140 100%)" 
-                                 style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);"></div>
-                            <div class="swatch" 
-                                 data-gradient="linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)" 
-                                 style="background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);"></div>
+                            <div class="swatch selected" data-gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                            <div class="swatch" data-gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>
+                            <div class="swatch" data-gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"></div>
+                            <div class="swatch" data-gradient="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);"></div>
+                            <div class="swatch" data-gradient="linear-gradient(135deg, #fa709a 0%, #fee140 100%)" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);"></div>
+                            <div class="swatch" data-gradient="linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)" style="background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);"></div>
                         </div>
-                        <input type="hidden" name="cover_gradient" value="">
+
+                        <!-- Or paste your own URL -->
+                        <div style="margin-top: 0.75rem;">
+                            <input type="text" class="form-input" id="customImageUrl" placeholder="Or paste an image URL..." style="font-size: 0.85rem;">
+                        </div>
+
+                        <input type="hidden" name="cover_gradient" value="linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
+                        <input type="hidden" name="cover_image" value="">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Accent Color</label>
                         <div class="swatches-row" id="colorSwatches">
-                            <div class="swatch" data-color="#7c3aed" style="background: #7c3aed;"></div>
+                            <div class="swatch selected" data-color="#7c3aed" style="background: #7c3aed;"></div>
                             <div class="swatch" data-color="#2563eb" style="background: #2563eb;"></div>
                             <div class="swatch" data-color="#059669" style="background: #059669;"></div>
                             <div class="swatch" data-color="#dc2626" style="background: #dc2626;"></div>
@@ -379,118 +473,133 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Event Status *</label>
-                        <select class="form-select" name="status" required>
-                            <option value="published">Published</option>
-                            <option value="draft">Draft</option>
+                        <label class="form-label">Event Status</label>
+                        <select class="form-select" name="status">
+                            <option value="published">Published — visible to everyone</option>
+                            <option value="draft">Draft — only visible to you</option>
                         </select>
                     </div>
+                </div>
 
-                    <div class="section-divider"></div>
-
-                    <button type="submit" class="btn btn-primary btn-lg btn-full">Create Event</button>
-                </form>
-            </div>
+                <button type="submit" class="btn-submit">Create Event</button>
+            </form>
         </div>
     </div>
 
-    <script src="/js/auth.js"></script>
     <script>
-        // Initialize auth
-        requireLogin('/create');
-        updateNav();
+        // Check auth
+        fetch('/api/me').then(r => r.json()).then(data => {
+            if (!data.user) window.location.href = '/?redirect=/create';
+        });
 
-        const form = document.getElementById('createEventForm');
-        const priceField = document.getElementById('priceField');
-        const isPaidInput = document.querySelector('input[name="is_paid"]');
-        const toggleBtns = document.querySelectorAll('.toggle-btn');
-        const gradientSwatches = document.querySelectorAll('#gradientSwatches .swatch');
-        const colorSwatches = document.querySelectorAll('#colorSwatches .swatch');
+        const form = document.getElementById('createForm');
+        const preview = document.getElementById('coverPreview');
+        const coverGradientInput = document.querySelector('input[name="cover_gradient"]');
+        const coverImageInput = document.querySelector('input[name="cover_image"]');
+        const customUrlInput = document.getElementById('customImageUrl');
 
-        // Ticket type toggle
-        toggleBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                toggleBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+        function clearAllCoverSelections() {
+            document.querySelectorAll('#gradientSwatches .swatch').forEach(s => s.classList.remove('selected'));
+            document.querySelectorAll('#imageSwatches .swatch-img').forEach(s => s.classList.remove('selected'));
+        }
 
-                const isFreePlan = btn.dataset.type === 'free';
-                isPaidInput.value = !isFreePlan;
-                priceField.classList.toggle('show', !isFreePlan);
+        function setGradientCover(gradient) {
+            coverGradientInput.value = gradient;
+            coverImageInput.value = '';
+            customUrlInput.value = '';
+            preview.style.background = gradient;
+            preview.style.backgroundImage = '';
+            preview.style.backgroundSize = '';
+        }
 
-                if (isFreePlan) {
-                    document.querySelector('input[name="ticket_price"]').removeAttribute('required');
-                } else {
-                    document.querySelector('input[name="ticket_price"]').setAttribute('required', 'required');
-                }
+        function setImageCover(url) {
+            coverImageInput.value = url;
+            coverGradientInput.value = '';
+            preview.style.background = `url('${url}') center/cover no-repeat`;
+        }
+
+        // Image swatch selection
+        document.querySelectorAll('#imageSwatches .swatch-img').forEach(swatch => {
+            swatch.addEventListener('click', () => {
+                clearAllCoverSelections();
+                swatch.classList.add('selected');
+                setImageCover(swatch.dataset.image);
             });
         });
 
         // Gradient swatch selection
-        gradientSwatches.forEach(swatch => {
+        document.querySelectorAll('#gradientSwatches .swatch').forEach(swatch => {
             swatch.addEventListener('click', () => {
-                gradientSwatches.forEach(s => s.classList.remove('selected'));
+                clearAllCoverSelections();
                 swatch.classList.add('selected');
-                document.querySelector('input[name="cover_gradient"]').value = swatch.dataset.gradient;
+                setGradientCover(swatch.dataset.gradient);
             });
         });
 
+        // Custom URL input
+        customUrlInput.addEventListener('input', () => {
+            const url = customUrlInput.value.trim();
+            if (url) {
+                clearAllCoverSelections();
+                setImageCover(url);
+            }
+        });
+
         // Color swatch selection
-        colorSwatches.forEach(swatch => {
+        document.querySelectorAll('#colorSwatches .swatch').forEach(swatch => {
             swatch.addEventListener('click', () => {
-                colorSwatches.forEach(s => s.classList.remove('selected'));
+                document.querySelectorAll('#colorSwatches .swatch').forEach(s => s.classList.remove('selected'));
                 swatch.classList.add('selected');
                 document.querySelector('input[name="accent_color"]').value = swatch.dataset.color;
             });
         });
 
-        // Set default selections
-        if (gradientSwatches.length > 0) {
-            gradientSwatches[0].classList.add('selected');
-            document.querySelector('input[name="cover_gradient"]').value = gradientSwatches[0].dataset.gradient;
-        }
-        colorSwatches[0].classList.add('selected');
-
         // Form submission
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const btn = form.querySelector('.btn-submit');
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
 
-            const formData = new FormData(form);
+            const fd = new FormData(form);
             const data = {
-                title: formData.get('title'),
-                description: formData.get('description'),
-                event_date: formData.get('event_date'),
-                start_time: formData.get('start_time'),
-                end_time: formData.get('end_time'),
-                location: formData.get('location'),
-                capacity: parseInt(formData.get('capacity')),
-                is_paid: formData.get('is_paid') === 'true',
-                ticket_price: formData.get('is_paid') === 'true' ? parseFloat(formData.get('ticket_price')) : null,
-                custom_slug: formData.get('custom_slug') || null,
-                cover_gradient: formData.get('cover_gradient'),
-                accent_color: formData.get('accent_color'),
-                status: formData.get('status')
+                title: fd.get('title'),
+                description: fd.get('description'),
+                date: fd.get('event_date'),
+                start_time: fd.get('start_time'),
+                end_time: fd.get('end_time'),
+                location: fd.get('location'),
+                capacity: parseInt(fd.get('capacity')),
+                ticket_type: 'free',
+                price: 0,
+                custom_slug: fd.get('custom_slug') || null,
+                cover_gradient: fd.get('cover_gradient') || null,
+                cover_image: fd.get('cover_image') || null,
+                accent_color: fd.get('accent_color'),
+                status: fd.get('status')
             };
 
             try {
-                const response = await fetch('/api/events', {
+                const res = await fetch('/api/events', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
 
-                if (!response.ok) {
-                    const error = await response.json();
-                    alert('Error creating event: ' + (error.message || 'Unknown error'));
+                if (!res.ok) {
+                    const err = await res.json();
+                    alert(err.error || 'Failed to create event');
+                    btn.disabled = false;
+                    btn.textContent = 'Create Event';
                     return;
                 }
 
-                const result = await response.json();
-                window.location.href = `/event/${result.slug}`;
+                const result = await res.json();
+                window.location.href = '/event/' + result.slug;
             } catch (err) {
-                alert('Error creating event: ' + err.message);
+                alert('Something went wrong. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Create Event';
             }
         });
     </script>

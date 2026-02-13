@@ -82,6 +82,7 @@ app.get('/event/:slug', async (req, res) => {
 
 // ─── Static page routes ───────────────────────────────
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'views', 'home.html')));
+app.get('/browse', (req, res) => res.sendFile(path.join(__dirname, 'views', 'browse.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'views', 'login.html')));
 app.get('/signup', (req, res) => res.sendFile(path.join(__dirname, 'views', 'signup.html')));
 app.get('/create', (req, res) => res.sendFile(path.join(__dirname, 'views', 'create.html')));
